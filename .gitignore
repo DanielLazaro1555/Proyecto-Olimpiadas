@@ -50,3 +50,6 @@ htmlcov/
 
 # Carpeta interna de clases/validador (no parte del entregable)
 clases/
+
+# Temp/Configuración local de desarrollo
+.antigravitycli/
