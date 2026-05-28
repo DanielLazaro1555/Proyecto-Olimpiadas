@@ -87,45 +87,21 @@
             <form id="formEquipo" class="space-y-3">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">País</label>
+                <!-- initSearchSelect() reemplaza esto con el combobox desde paises.json -->
                 <input
                   id="pais"
-                  type="text"
-                  placeholder="Ej: Perú"
-                  list="listaPaises"
-                  autocomplete="off"
-                  required
+                  type="hidden"
                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                 />
-                <datalist id="listaPaises">
-                  <option value="Perú"></option>
-                  <option value="Chile"></option>
-                  <option value="Argentina"></option>
-                  <option value="Brasil"></option>
-                  <option value="Uruguay"></option>
-                  <option value="Colombia"></option>
-                  <option value="Ecuador"></option>
-                  <option value="Bolivia"></option>
-                  <option value="Paraguay"></option>
-                  <option value="Venezuela"></option>
-                </datalist>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Deporte</label>
+                <!-- _initDeporteSelect() reemplaza esto con <select> desde deportes.json -->
                 <input
                   id="deporteEquipo"
-                  type="text"
-                  placeholder="Ej: Fútbol"
-                  list="deportesObligatorios"
-                  autocomplete="off"
-                  required
-                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  type="hidden"
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
                 />
-                <datalist id="deportesObligatorios">
-                  <option value="Fútbol"></option>
-                  <option value="Básquet"></option>
-                  <option value="Vóley"></option>
-                  <option value="Ping-Pong"></option>
-                </datalist>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del equipo</label>
@@ -222,14 +198,11 @@
             </h2>
             <p class="text-xs text-gray-500 mb-4">Crea los enfrentamientos de forma aleatoria. Necesitas al menos 2 equipos registrados en el deporte.</p>
             <form id="formFixture" class="flex gap-2">
+              <!-- _initDeporteSelect() reemplaza esto con <select> desde deportes.json -->
               <input
                 id="deporteFixture"
-                type="text"
-                placeholder="Deporte (ej: Fútbol)"
-                list="deportesList"
-                autocomplete="off"
-                required
-                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+                type="hidden"
+                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 bg-white"
               />
               <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition whitespace-nowrap">
                 Generar
@@ -247,12 +220,8 @@
             <form id="formConsultarFixture" class="flex gap-2">
               <input
                 id="deporteConsultar"
-                type="text"
-                placeholder="Deporte (ej: Fútbol)"
-                list="deportesList"
-                autocomplete="off"
-                required
-                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                type="hidden"
+                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
               />
               <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition whitespace-nowrap">
                 Consultar
@@ -318,12 +287,8 @@
           <form id="formTabla" class="flex gap-2 mb-4">
             <input
               id="deporteTabla"
-              type="text"
-              placeholder="Deporte (ej: Fútbol)"
-              list="deportesList"
-              autocomplete="off"
-              required
-              class="flex-1 max-w-xs border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              type="hidden"
+              class="flex-1 max-w-xs border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white"
             />
             <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-2 rounded-lg text-sm transition">
               Mostrar
@@ -405,10 +370,6 @@
 
         </div>
       </div>
-
-    <!-- datalists dinámicos -->
-    <datalist id="deportesList"></datalist>
-    <datalist id="equiposList"></datalist>
 
     <!-- Loader global -->
     <div id="global-loader" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">

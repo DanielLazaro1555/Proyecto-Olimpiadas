@@ -1,0 +1,6 @@
+[
+  { "nombre": "Fútbol",    "categoria": "Varones" },
+  { "nombre": "Básquet",   "categoria": "Varones" },
+  { "nombre": "Vóley",     "categoria": "Damas"   },
+  { "nombre": "Ping-Pong", "categoria": "Mixto"   }
+]

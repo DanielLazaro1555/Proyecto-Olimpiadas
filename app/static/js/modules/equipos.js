@@ -20,7 +20,7 @@ export async function registrarEquipo(event) {
 
     showMessage("equipoResultado", `✅ ${data.mensaje} (ID: ${data.id})`, false);
     document.getElementById("formEquipo").reset();
-    cargarSugerencias(); // refrescar select y datalists
+    cargarSugerencias(); // refrescar select de equipos
   } catch (err) {
     showMessage("equipoResultado", `❌ ${err.message}`);
   }
