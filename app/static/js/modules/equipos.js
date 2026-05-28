@@ -38,6 +38,8 @@ export async function listarEquipos() {
       return;
     }
 
+    const puedeEliminar = ["admin", "operador"].includes(localStorage.getItem("rol"));
+
     const filas = equipos.map((eq) => `
       <tr class="hover:bg-gray-50">
         <td class="px-3 py-2 text-gray-500 text-xs">${eq.id}</td>
@@ -45,6 +47,14 @@ export async function listarEquipos() {
         <td class="px-3 py-2">${eq.pais}</td>
         <td class="px-3 py-2">
           <span class="bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full">${eq.deporte}</span>
+        </td>
+        <td class="px-3 py-2 text-center">
+          ${puedeEliminar
+            ? `<button onclick="window.eliminarEquipo(${eq.id}, '${eq.nombre_equipo}')"
+                 class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-lg transition">
+                 Eliminar
+               </button>`
+            : `<span class="text-gray-300 text-xs">—</span>`}
         </td>
       </tr>
     `).join("");
@@ -57,6 +67,7 @@ export async function listarEquipos() {
             <th class="px-3 py-2 text-left">Equipo</th>
             <th class="px-3 py-2 text-left">País</th>
             <th class="px-3 py-2 text-left">Deporte</th>
+            <th class="px-3 py-2 text-center">Acción</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">${filas}</tbody>
@@ -64,5 +75,18 @@ export async function listarEquipos() {
     `;
   } catch (err) {
     contenedor.innerHTML = `<p class="text-red-600 text-sm mt-2">❌ ${err.message}</p>`;
+  }
+}
+
+export async function eliminarEquipo(id, nombre) {
+  if (!confirm(`¿Eliminar el equipo "${nombre}"?\nEsta acción no se puede deshacer.`)) return;
+  try {
+    const res = await window.authFetch(`${API_BASE}/equipos/${id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Error al eliminar");
+    showMessage("equipoResultado", `✅ ${data.mensaje}`, false);
+    listarEquipos();
+  } catch (err) {
+    showMessage("equipoResultado", `❌ ${err.message}`);
   }
 }

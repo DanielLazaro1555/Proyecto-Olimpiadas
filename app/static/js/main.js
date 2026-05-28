@@ -1,6 +1,6 @@
 // main.js — punto de entrada principal
 
-import { registrarEquipo, listarEquipos } from "./modules/equipos.js";
+import { registrarEquipo, listarEquipos, eliminarEquipo } from "./modules/equipos.js";
 import { inscribirDeportista } from "./modules/deportistas.js";
 import { generarFixture, consultarFixture } from "./modules/fixture.js";
 import { registrarResultado, mostrarTabla } from "./modules/partidos.js";
@@ -30,8 +30,9 @@ window.authFetch = async function (url, options = {}) {
   return res;
 };
 
-// Exponer eliminarUsuario globalmente (se llama desde onclick en tabla)
+// Exponer funciones globales (llamadas desde onclick en tablas dinámicas)
 window.eliminarUsuario = eliminarUsuario;
+window.eliminarEquipo  = eliminarEquipo;
 
 document.addEventListener("DOMContentLoaded", () => {
   if (!localStorage.getItem("token")) {

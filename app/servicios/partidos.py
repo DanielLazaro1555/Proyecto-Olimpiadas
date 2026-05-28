@@ -18,12 +18,17 @@ def registrar_resultado(current_user):
     goles_local = data.get("goles_local")
     goles_visitante = data.get("goles_visitante")
 
-    if not all([id_partido, goles_local is not None, goles_visitante is not None]):
-        return jsonify(
-            {
-                "error": "Faltan campos requeridos: id_partido, goles_local, goles_visitante"
-            }
-        ), 400
+    if id_partido is None or goles_local is None or goles_visitante is None:
+        return jsonify({"error": "Faltan campos: id_partido, goles_local, goles_visitante"}), 400
+
+    if not isinstance(goles_local, int) or not isinstance(goles_visitante, int):
+        return jsonify({"error": "Los goles deben ser números enteros"}), 400
+
+    if goles_local < 0 or goles_visitante < 0:
+        return jsonify({"error": "Los goles no pueden ser negativos"}), 400
+
+    if goles_local > 99 or goles_visitante > 99:
+        return jsonify({"error": "Valor de goles fuera de rango (máx. 99)"}), 400
 
     with db.get_db() as conn:
         cursor = conn.cursor()
@@ -73,7 +78,7 @@ def obtener_tabla_posiciones(deporte):
 
         # Obtener todos los equipos del deporte
         cursor.execute(
-            "SELECT id, nombre_equipo FROM equipos WHERE deporte = ?", (deporte,)
+            "SELECT id, nombre_equipo FROM equipos WHERE deporte = ? COLLATE NOCASE", (deporte,)
         )
         equipos = cursor.fetchall()
 
@@ -162,9 +167,5 @@ def obtener_tabla_posiciones(deporte):
 
 
 def actualizar_tabla_posiciones(deporte):
-    """
-    Función interna para recalcular la tabla de posiciones.
-    No es necesario devolver nada, solo se ejecuta después de cada resultado.
-    """
-    print(f"Tabla de posiciones actualizada para el deporte: {deporte}")
-    return
+    """Placeholder — la tabla se calcula dinámicamente en obtener_tabla_posiciones."""
+    pass

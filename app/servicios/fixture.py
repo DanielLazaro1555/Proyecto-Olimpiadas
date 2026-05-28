@@ -12,16 +12,16 @@ fixture_bp = Blueprint("fixture", __name__, url_prefix="/fixture")
 
 @fixture_bp.route("/generar/<string:deporte>", methods=["POST"])
 @token_required
-def generar_fixture(deporte, current_user):
+def generar_fixture(current_user, deporte):
     """Genera enfrentamientos para un deporte. Solo admins."""
     if current_user["rol"] not in ("admin", "operador"):
         return jsonify({"error": "Se requiere rol operador o administrador"}), 403
     with db.get_db() as conn:
         cursor = conn.cursor()
 
-        # Contar equipos inscritos en el deporte
+        # Contar equipos inscritos en el deporte (case-insensitive)
         cursor.execute(
-            "SELECT id, nombre_equipo FROM equipos WHERE deporte = ?", (deporte,)
+            "SELECT id, nombre_equipo FROM equipos WHERE deporte = ? COLLATE NOCASE", (deporte,)
         )
         equipos = cursor.fetchall()
 
@@ -33,7 +33,7 @@ def generar_fixture(deporte, current_user):
             ), 400
 
         # Verificar si ya existe un fixture para este deporte
-        cursor.execute("SELECT id FROM partidos WHERE deporte = ? LIMIT 1", (deporte,))
+        cursor.execute("SELECT id FROM partidos WHERE deporte = ? COLLATE NOCASE LIMIT 1", (deporte,))
         if cursor.fetchone():
             return jsonify(
                 {
@@ -83,10 +83,6 @@ def generar_fixture(deporte, current_user):
             )
 
         conn.commit()
-        print(
-            f"Fixture generado para {deporte}. {len(partidos_guardados)} partidos programados."
-        )
-
         return jsonify(
             {
                 "mensaje": f"Fixture generado exitosamente para {deporte}",
@@ -114,7 +110,7 @@ def consultar_fixture(deporte):
             FROM partidos p
             JOIN equipos eq_local ON p.equipo_local_id = eq_local.id
             JOIN equipos eq_visit ON p.equipo_visitante_id = eq_visit.id
-            WHERE p.deporte = ?
+            WHERE p.deporte = ? COLLATE NOCASE
             ORDER BY p.fecha, p.hora
         """,
             (deporte,),
@@ -125,11 +121,10 @@ def consultar_fixture(deporte):
 
 @fixture_bp.route("/eliminar/<string:deporte>", methods=["DELETE"])
 @token_required
-def eliminar_fixture(deporte, current_user):
-    """
-    Eliminar todos los partidos de un deporte (para regenerar si es necesario).
-    Requiere autenticación (token válido).
-    """
+def eliminar_fixture(current_user, deporte):
+    """Eliminar partidos de un deporte para regenerar. Solo operador y admin."""
+    if current_user["rol"] not in ("admin", "operador"):
+        return jsonify({"error": "Se requiere rol operador o administrador"}), 403
     with db.get_db() as conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM partidos WHERE deporte = ?", (deporte,))

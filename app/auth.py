@@ -2,6 +2,8 @@
 
 import datetime
 import os
+import re
+import sqlite3
 from functools import wraps
 
 import bcrypt
@@ -106,6 +108,8 @@ def registrar(current_user):
 
     if not username or not password:
         return jsonify({"error": "Usuario y contraseña requeridos"}), 400
+    if not re.match(r'^[a-zA-Z0-9_]{3,30}$', username):
+        return jsonify({"error": "Usuario: 3-30 caracteres, solo letras, números y guión bajo"}), 400
     if len(password) < 6:
         return jsonify({"error": "La contraseña debe tener al menos 6 caracteres"}), 400
     if rol not in ("admin", "operador", "visualizador"):
@@ -123,7 +127,7 @@ def registrar(current_user):
             )
             conn.commit()
         return jsonify({"mensaje": f"Usuario '{username}' registrado exitosamente"}), 201
-    except Exception:
+    except sqlite3.IntegrityError:
         return jsonify({"error": "El nombre de usuario ya existe"}), 409
 
 
