@@ -50,42 +50,81 @@ export async function mostrarTabla(event) {
       return;
     }
 
+    const dgStr = (dg) =>
+      dg > 0 ? `<span class="text-green-600 font-medium">+${dg}</span>`
+             : dg < 0 ? `<span class="text-red-500 font-medium">${dg}</span>`
+             : `<span class="text-gray-400">0</span>`;
+
+    const rowStyles = [
+      "bg-yellow-50 border-l-4 border-yellow-400",   // 1°
+      "bg-gray-50  border-l-4 border-gray-300",       // 2°
+      "bg-orange-50 border-l-4 border-orange-300",    // 3°
+    ];
+
     const filas = tabla.map((row, i) => {
-      const medalla = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}`;
+      const pos    = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}°`;
+      const estilo = rowStyles[i] ?? "hover:bg-gray-50 border-l-4 border-transparent";
+      const sinJuegos = row.pj === 0;
+
       return `
-        <tr class="${i < 3 ? "bg-yellow-50" : "hover:bg-gray-50"} border-b border-gray-100">
-          <td class="px-3 py-2 text-center font-bold">${medalla}</td>
-          <td class="px-3 py-2 font-semibold">${row.equipo_nombre}</td>
-          <td class="px-3 py-2 text-center">${row.pj}</td>
-          <td class="px-3 py-2 text-center text-green-700 font-medium">${row.pg}</td>
-          <td class="px-3 py-2 text-center text-gray-500">${row.pe}</td>
-          <td class="px-3 py-2 text-center text-red-500">${row.pp}</td>
-          <td class="px-3 py-2 text-center">${row.gf}</td>
-          <td class="px-3 py-2 text-center">${row.gc}</td>
-          <td class="px-3 py-2 text-center">${row.dg}</td>
-          <td class="px-3 py-2 text-center font-bold text-blue-700 text-base">${row.puntos}</td>
+        <tr class="${estilo} border-b border-gray-100 transition-colors">
+          <td class="px-4 py-3 text-center text-lg">${pos}</td>
+          <td class="px-4 py-3">
+            <span class="font-semibold text-gray-800">${row.equipo_nombre}</span>
+            ${sinJuegos ? '<span class="ml-2 text-xs text-gray-400 italic">sin partidos</span>' : ""}
+          </td>
+          <td class="px-4 py-3 text-center text-gray-600">${row.pj}</td>
+          <td class="px-4 py-3 text-center font-medium text-green-700">${row.pg}</td>
+          <td class="px-4 py-3 text-center text-gray-500">${row.pe}</td>
+          <td class="px-4 py-3 text-center text-red-500">${row.pp}</td>
+          <td class="px-4 py-3 text-center text-gray-600">${row.gf}</td>
+          <td class="px-4 py-3 text-center text-gray-600">${row.gc}</td>
+          <td class="px-4 py-3 text-center">${dgStr(row.dg)}</td>
+          <td class="px-4 py-3 text-center">
+            <span class="inline-block bg-blue-600 text-white font-bold text-sm px-3 py-0.5 rounded-full min-w-[2rem]">
+              ${row.puntos}
+            </span>
+          </td>
         </tr>`;
     }).join("");
 
     contenedor.innerHTML = `
-      <table class="w-full text-sm border border-gray-100 rounded-lg overflow-hidden">
-        <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
-          <tr>
-            <th class="px-3 py-2 text-center">#</th>
-            <th class="px-3 py-2 text-left">Equipo</th>
-            <th class="px-3 py-2 text-center" title="Partidos Jugados">PJ</th>
-            <th class="px-3 py-2 text-center" title="Partidos Ganados">PG</th>
-            <th class="px-3 py-2 text-center" title="Partidos Empatados">PE</th>
-            <th class="px-3 py-2 text-center" title="Partidos Perdidos">PP</th>
-            <th class="px-3 py-2 text-center" title="Goles a Favor">GF</th>
-            <th class="px-3 py-2 text-center" title="Goles en Contra">GC</th>
-            <th class="px-3 py-2 text-center" title="Diferencia de Goles">DG</th>
-            <th class="px-3 py-2 text-center" title="Puntos totales">Pts</th>
-          </tr>
-        </thead>
-        <tbody>${filas}</tbody>
-      </table>
-      <p class="text-xs text-gray-400 mt-2">* Pasa el cursor sobre las siglas para ver su significado</p>`;
+      <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-800 text-white text-xs">
+              <th class="px-4 py-3 text-center w-10">Pos.</th>
+              <th class="px-4 py-3 text-left">Equipo</th>
+              <th class="px-4 py-3 text-center" title="Partidos jugados">J</th>
+              <th class="px-4 py-3 text-center text-green-300" title="Partidos ganados">G</th>
+              <th class="px-4 py-3 text-center text-yellow-300" title="Partidos empatados">E</th>
+              <th class="px-4 py-3 text-center text-red-400" title="Partidos perdidos">P</th>
+              <th class="px-4 py-3 text-center" title="Goles a favor">GF</th>
+              <th class="px-4 py-3 text-center" title="Goles en contra">GC</th>
+              <th class="px-4 py-3 text-center" title="Diferencia de goles">Dif.</th>
+              <th class="px-4 py-3 text-center text-blue-300">Pts</th>
+            </tr>
+            <tr class="bg-gray-700 text-gray-300 text-xs">
+              <td colspan="2" class="px-4 py-1 text-gray-400">Clasificación · ${deporte}</td>
+              <td class="px-4 py-1 text-center text-gray-400">Jugados</td>
+              <td class="px-4 py-1 text-center text-green-400">Ganados</td>
+              <td class="px-4 py-1 text-center text-yellow-400">Empates</td>
+              <td class="px-4 py-1 text-center text-red-400">Perdidos</td>
+              <td class="px-4 py-1 text-center text-gray-400">A favor</td>
+              <td class="px-4 py-1 text-center text-gray-400">En contra</td>
+              <td class="px-4 py-1 text-center text-gray-400">Diferencia</td>
+              <td class="px-4 py-1 text-center text-blue-400">Puntos</td>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-100">${filas}</tbody>
+        </table>
+      </div>
+      <div class="flex flex-wrap gap-4 mt-3 text-xs text-gray-500">
+        <span>🟢 <b>Victoria</b>: 3 pts</span>
+        <span>🟡 <b>Empate</b>: 1 pt</span>
+        <span>🔴 <b>Derrota</b>: 0 pts</span>
+        <span class="text-gray-400">Orden: puntos → diferencia de goles → goles a favor</span>
+      </div>`;
   } catch (err) {
     contenedor.innerHTML = `<p class="text-red-600 text-sm mt-2">❌ ${err.message}</p>`;
   }
