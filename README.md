@@ -76,14 +76,14 @@ Gestiona los equipos participantes.
 |---|---|
 | `registrarEquipo(region, deporte, nombreEquipo)` | Registra un equipo con validación de unicidad por región (solo admin/operador) |
 | `consultarEquipos()` | Devuelve el listado completo de equipos |
-| `eliminarEquipo(idEquipo)` | Elimina un equipo si no tiene partidos asignados (solo admin) |
+| `eliminarEquipo(idEquipo)` | Elimina un equipo si no tiene partidos asignados (solo admin/operador) |
 
 ### Servicio de Deportistas (`/deportistas`)
 Administra la inscripción de deportistas en equipos.
 
 | Operación | Descripción |
 |---|---|
-| `inscribirDeportista(idEquipo, datos)` | Inscribe un deportista validando duplicados (solo admin) |
+| `inscribirDeportista(idEquipo, datos)` | Inscribe un deportista validando duplicados (solo admin/operador) |
 | `listarDeportistasPorEquipo(idEquipo)` | Lista los deportistas de un equipo |
 
 ### Servicio de Partidos (`/partidos`)
@@ -91,7 +91,7 @@ Gestiona resultados y tabla de posiciones.
 
 | Operación | Descripción |
 |---|---|
-| `registrarResultado(idPartido, golesLocal, golesVisitante)` | Registra resultado (no sobrescribible, solo admin) |
+| `registrarResultado(idPartido, golesLocal, golesVisitante)` | Registra resultado (no sobrescribible, solo admin/operador) |
 | `consultarTablaPosiciones(deporte)` | Calcula y devuelve la tabla de posiciones por deporte |
 
 ### Servicio de Fixture (`/fixture`)
@@ -99,7 +99,7 @@ Genera el calendario de enfrentamientos aleatorios.
 
 | Operación | Descripción |
 |---|---|
-| `generarFixture(deporte)` | Crea emparejamientos aleatorios con fechas (mínimo 2 equipos, solo admin) |
+| `generarFixture(deporte)` | Crea emparejamientos aleatorios con fechas (mínimo 2 equipos, solo admin/operador) |
 | `consultarFixture(deporte)` | Devuelve el calendario de partidos por deporte |
 
 ---
@@ -197,13 +197,16 @@ Proyecto-Olimpiadas/
 │   ├── auth.py                     # Servicio de autenticación (JWT + bcrypt)
 │   ├── database.py                 # Inicialización y conexión SQLite
 │   ├── requirements.txt            # Dependencias Python
-│   ├── olimpiadas.db               # Base de datos SQLite (auto-generada)
+│   ├── olimpiadas.db               # Base de datos SQLite (se genera al primer arranque)
 │   ├── servicios/
 │   │   ├── equipos.py              # Servicio de Equipos
 │   │   ├── deportistas.py          # Servicio de Deportistas
 │   │   ├── partidos.py             # Servicio de Partidos
 │   │   └── fixture.py              # Servicio de Fixture
 │   ├── static/
+│   │   ├── data/
+│   │   │   ├── regiones.json       # 25 regiones del Perú
+│   │   │   └── deportes.json       # 4 deportes con categoría
 │   │   └── js/
 │   │       ├── main.js             # Punto de entrada JS
 │   │       └── modules/            # Módulos ES por servicio
@@ -214,6 +217,7 @@ Proyecto-Olimpiadas/
 │   │           ├── partidos.js
 │   │           ├── usuarios.js
 │   │           ├── autocomplete.js
+│   │           ├── searchSelect.js  # Combobox buscable (regiones/deportes)
 │   │           └── ui.js
 │   └── templates/
 │       ├── index.html              # Interfaz principal (Tailwind CSS)
@@ -268,7 +272,8 @@ La aplicación estará disponible en `http://127.0.0.1:5000`
 
 | Usuario | Contraseña | Rol |
 |---------|-----------|-----|
-| `admin` | `admin123` | Administrador (acceso completo) |
+| `admin` | `admin123` | Administrador (acceso completo + gestión de usuarios) |
+| `operador` | `operador123` | Operador (gestión deportiva, sin gestión de usuarios) |
 | `viewer` | `viewer123` | Visualizador (solo consulta) |
 
 ---
@@ -289,31 +294,32 @@ La aplicación estará disponible en `http://127.0.0.1:5000`
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
 | GET | `/equipos/` | — | Listar todos los equipos |
-| POST | `/equipos/` | Admin | Registrar un nuevo equipo |
-| DELETE | `/equipos/<id>` | Admin | Eliminar un equipo |
+| POST | `/equipos/` | Admin/Op | Registrar un nuevo equipo |
+| DELETE | `/equipos/<id>` | Admin/Op | Eliminar un equipo |
 
 ### Deportistas — `/deportistas`
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
 | GET | `/deportistas/equipo/<id>` | — | Listar deportistas de un equipo |
-| POST | `/deportistas/inscribir` | Admin | Inscribir un deportista |
+| POST | `/deportistas/inscribir` | Admin/Op | Inscribir un deportista |
 
 ### Fixture — `/fixture`
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
-| POST | `/fixture/generar/<deporte>` | Admin | Generar calendario para un deporte |
+| POST | `/fixture/generar/<deporte>` | Admin/Op | Generar calendario para un deporte |
+| DELETE | `/fixture/eliminar/<deporte>` | Admin/Op | Eliminar el calendario de un deporte |
 | GET | `/fixture/consultar/<deporte>` | Token | Consultar partidos de un deporte |
 
 ### Partidos — `/partidos`
 
 | Método | Ruta | Auth | Descripción |
 |---|---|---|---|
-| POST | `/partidos/resultado` | Admin | Registrar resultado de un partido |
+| POST | `/partidos/resultado` | Admin/Op | Registrar resultado de un partido |
 | GET | `/partidos/tabla/<deporte>` | Token | Consultar tabla de posiciones |
 
-> **Auth:** `—` = público · `Token` = requiere JWT válido · `Admin` = requiere rol administrador
+> **Auth:** `—` = público · `Token` = requiere JWT válido · `Admin` = solo administrador · `Admin/Op` = administrador u operador
 
 ---
 
