@@ -1,10 +1,10 @@
 # Sistema Olimpiadas Perú — SOA
 
 **Universidad Tecnológica del Perú · Facultad de Ingeniería**  
-**Asignatura:** Arquitectura Orientada al Servicio · Sección 35875  
+**Asignatura:** Arquitectura Orientada al Servicio (100000SI84) · Sección 35875  
 **Docente:** Ing. Kelvin Macedo Ylachoque  
 **Estudiante:** Huamán Lázaro, Daniel Esteban · U22326979  
-**Año:** 2025
+**Año:** 2026
 
 ---
 
@@ -14,100 +14,173 @@
 - [Problemática](#problemática)
 - [Solución propuesta](#solución-propuesta)
 - [Arquitectura de servicios](#arquitectura-de-servicios)
+- [Análisis de Arquitectura Hexagonal](#análisis-de-arquitectura-hexagonal)
 - [Procesos BPMN](#procesos-bpmn)
 - [Tecnologías](#tecnologías)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Cómo ejecutar](#cómo-ejecutar)
 - [Endpoints REST](#endpoints-rest)
 - [Planificación](#planificación)
+- [Plan APF3](#plan-apf3-semana-15)
 - [Referencias](#referencias)
 
 ---
 
 ## Descripción
 
-Sistema de gestión de eventos deportivos basado en **Arquitectura Orientada a Servicios (SOA)**. Modulariza los procesos críticos de las Olimpiadas Perú en servicios independientes y reutilizables, expuestos mediante APIs RESTful.
+Sistema de gestión de eventos deportivos basado en **Arquitectura Orientada a Servicios (SOA)**. Modulariza los procesos críticos de las Olimpiadas Perú en servicios independientes y reutilizables, expuestos mediante APIs RESTful y consumidos por un cliente web.
+
+Los cuatro deportes obligatorios son:
+
+| Deporte | Categoría |
+|---------|-----------|
+| Fútbol | Varones |
+| Básquet | Varones |
+| Vóley | Damas |
+| Ping-Pong | Mixto |
 
 ## Problemática
 
 La gestión tradicional de eventos deportivos a gran escala depende de procesos manuales o herramientas desconectadas, lo que genera:
 
 - Silos de información y redundancia de datos
-- Errores en la asignación de horarios
+- Errores en la asignación de horarios y fixture
 - Alta dificultad para escalar a nuevas disciplinas o instituciones
-- Falta de transparencia en resultados y fixtures
+- Falta de transparencia en resultados y tablas de posiciones
+- Sin control de acceso diferenciado por rol de usuario
 
 ## Solución propuesta
 
-Sistema *API-first* basado en SOA que desacopla la lógica de negocio en cuatro servicios independientes con contratos de interfaz claros. Permite que cada servicio evolucione de forma autónoma sin afectar al sistema completo.
+Sistema *API-first* basado en SOA que desacopla la lógica de negocio en cuatro servicios independientes con contratos de interfaz claros. Cada servicio evoluciona de forma autónoma sin afectar al sistema completo. Incluye autenticación JWT con roles (admin / visualizador) para control de acceso.
 
 ---
 
 ## Arquitectura de servicios
 
-### Servicio de Equipos
+### Servicio de Autenticación (`/auth`)
+Gestiona el acceso al sistema mediante JWT y bcrypt.
+
+| Operación | Descripción |
+|---|---|
+| `login(username, password)` | Autentica al usuario y retorna token JWT |
+| `registrarUsuario(username, password, rol)` | Crea una cuenta nueva (solo admin) |
+| `listarUsuarios()` | Lista todos los usuarios del sistema (solo admin) |
+| `eliminarUsuario(id)` | Elimina un usuario (solo admin, no puede autoeliminar) |
+
+### Servicio de Equipos (`/equipos`)
 Gestiona los equipos participantes.
 
 | Operación | Descripción |
 |---|---|
-| `registrarEquipo(pais, deporte, nombreEquipo)` | Registra un equipo con validación de unicidad |
-| `verificarExistencia(pais, deporte)` | Comprueba si ya existe un equipo del mismo país en ese deporte |
+| `registrarEquipo(pais, deporte, nombreEquipo)` | Registra un equipo con validación de unicidad (solo admin) |
 | `consultarEquipos()` | Devuelve el listado completo de equipos |
-| `eliminarEquipo(idEquipo)` | Elimina un equipo (solo si no tiene partidos asignados) |
+| `eliminarEquipo(idEquipo)` | Elimina un equipo si no tiene partidos asignados (solo admin) |
 
-### Servicio de Deportistas
+### Servicio de Deportistas (`/deportistas`)
 Administra la inscripción de deportistas en equipos.
 
 | Operación | Descripción |
 |---|---|
-| `inscribirDeportista(idEquipo, datosDeportista)` | Inscribe un deportista validando que no esté duplicado |
-| `verificarInscripcion(idEquipo, idDeportista)` | Verifica si el deportista ya pertenece al equipo |
+| `inscribirDeportista(idEquipo, datos)` | Inscribe un deportista validando duplicados (solo admin) |
 | `listarDeportistasPorEquipo(idEquipo)` | Lista los deportistas de un equipo |
-| `eliminarInscripcion(idInscripcion)` | Elimina la inscripción de un deportista |
 
-### Servicio de Partidos
+### Servicio de Partidos (`/partidos`)
 Gestiona resultados y tabla de posiciones.
 
 | Operación | Descripción |
 |---|---|
-| `registrarResultado(idPartido, marcador)` | Registra el resultado (no permite sobrescribir) |
-| `verificarResultadoExistente(idPartido)` | Indica si el partido ya tiene resultado |
-| `consultarFixture(deporte)` | Devuelve el calendario de partidos por deporte |
-| `actualizarTablaPosiciones(idDeporte)` | Recalcula la tabla de posiciones |
+| `registrarResultado(idPartido, golesLocal, golesVisitante)` | Registra resultado (no sobrescribible, solo admin) |
+| `consultarTablaPosiciones(deporte)` | Calcula y devuelve la tabla de posiciones por deporte |
 
-### Servicio de Fixture (Sorteo)
+### Servicio de Fixture (`/fixture`)
 Genera el calendario de enfrentamientos aleatorios.
 
 | Operación | Descripción |
 |---|---|
-| `generarFixture(idDeporte)` | Crea emparejamientos y asigna fechas (mínimo 2 equipos) |
-| `contarEquiposInscriptos(idDeporte)` | Retorna el número de equipos en un deporte |
-| `notificarEquipos(idFixture)` | Notifica a los equipos sus fechas asignadas |
+| `generarFixture(deporte)` | Crea emparejamientos aleatorios con fechas (mínimo 2 equipos, solo admin) |
+| `consultarFixture(deporte)` | Devuelve el calendario de partidos por deporte |
+
+---
+
+## Análisis de Arquitectura Hexagonal
+
+> **Contexto (Semana 9 — Tema del sílabo):** ¿El prototipo usa o puede usar arquitectura hexagonal? ¿Genera valor?
+
+### ¿Qué es la Arquitectura Hexagonal?
+
+La arquitectura hexagonal (Ports & Adapters, propuesta por Alistair Cockburn) separa el sistema en tres zonas:
+
+- **Core / Dominio:** lógica de negocio pura, sin dependencias de infraestructura.
+- **Puertos:** interfaces que definen cómo el core se comunica hacia afuera.
+- **Adaptadores:** implementaciones concretas de esos puertos (HTTP, base de datos, etc.).
+
+### ¿El prototipo la usa actualmente?
+
+**Parcialmente.** La estructura actual presenta una separación por capas que se acerca al modelo hexagonal:
+
+| Componente actual | Rol en arquitectura hexagonal |
+|---|---|
+| `app.py` | Punto de entrada / adaptador de arranque |
+| Blueprints Flask (`equipos.py`, etc.) | Adaptadores HTTP (entrada) |
+| `database.py` | Adaptador de persistencia (salida) |
+| Lógica dentro de cada blueprint | Core (pero mezclada con Flask) |
+
+El principal punto de mejora es que la **lógica de negocio está acoplada al framework Flask** dentro de los mismos archivos de rutas. En una arquitectura hexagonal pura, el core no debería importar `Flask`, `request` ni `jsonify`.
+
+### ¿Puede adoptarla?
+
+Sí. La refactorización consistiría en:
+
+```
+app/
+├── core/                    # Lógica de negocio pura (sin Flask, sin SQLite)
+│   ├── equipos_service.py
+│   ├── fixture_service.py
+│   └── partidos_service.py
+├── adaptadores/
+│   ├── http/                # Blueprints Flask (adaptadores de entrada)
+│   └── db/                  # Acceso a SQLite (adaptadores de salida)
+└── puertos/
+    └── interfaces.py        # Clases abstractas / protocolos Python
+```
+
+### ¿Genera valor para este proyecto?
+
+| Beneficio | Aplica al proyecto |
+|---|---|
+| Cambiar SQLite por PostgreSQL sin tocar el core | ✅ Sí — relevante si escala |
+| Probar la lógica sin levantar Flask ni BD | ✅ Sí — facilita pruebas unitarias |
+| Cambiar de REST a GraphQL o gRPC | ✅ Sí — sin reescribir reglas de negocio |
+| Justifica la complejidad para un sistema de esta escala | ⚠ Parcialmente — para producción sí, para prototipo académico agrega overhead |
+
+**Conclusión:** La arquitectura hexagonal *puede* adoptarse y *generaría valor real* si el sistema fuera a producción o se integrara con sistemas externos. Para el prototipo académico actual, la separación por capas implementada es suficiente y mantiene los principios SOA (encapsulamiento, contratos claros, independencia de servicios). Se aplicará progresivamente en las semanas 11–15 como parte de la mejora continua del proyecto.
 
 ---
 
 ## Procesos BPMN
 
-Los flujos de negocio están modelados en cuatro diagramas BPMN ubicados en `Proyecto Individual/Diagramas BPMN/`:
+Los flujos de negocio están modelados en cuatro diagramas ubicados en `docs/bpmn/`:
 
-1. **Registrar equipo** — Valida unicidad por país y deporte antes de guardar.
-2. **Inscribir deportista** — Valida que el deportista no esté ya inscrito en el equipo.
-3. **Registrar resultado** — Solo permite registrar si el partido no tiene resultado previo.
-4. **Generar fixture** — Solo genera si hay al menos 2 equipos inscritos en el deporte.
+| Diagrama | Descripción |
+|---|---|
+| [Registrar equipo](docs/bpmn/Diagrama_1_Registrar_equipo.png) | Valida unicidad por país y deporte antes de guardar |
+| [Inscribir deportista](docs/bpmn/Diagrama_2_Inscribir_deportista.png) | Valida que el deportista no esté ya inscrito |
+| [Registrar resultado](docs/bpmn/Diagrama_3_Registrar_resultado.png) | Solo permite registrar si el partido no tiene resultado previo |
+| [Generar fixture](docs/bpmn/Diagrama_4_Generar_fixture_simple.png) | Solo genera si hay al menos 2 equipos en el deporte |
 
 ---
 
 ## Tecnologías
 
-| Capa | Tecnología |
-|---|---|
-| Lenguaje | Python 3 |
-| Framework API | Flask + Flask-CORS |
-| Base de datos | SQLite (`olimpiadas.db`) |
-| Frontend | HTML5 + CSS3 + JavaScript (Vanilla) |
-| Pruebas | Insomnia |
-| Control de versiones | Git |
-| Entorno | venv (entorno virtual Python) |
+| Capa | Tecnología | Justificación |
+|---|---|---|
+| Lenguaje backend | Python 3 | Sintaxis clara, gran ecosistema para APIs |
+| Framework API | Flask + Flask-CORS | Ligero, ideal para SOA con blueprints modulares |
+| Autenticación | PyJWT + bcrypt | JWT stateless para APIs REST, bcrypt para hash seguro de contraseñas |
+| Base de datos | SQLite (`olimpiadas.db`) | Sin servidor, fácil despliegue académico |
+| Frontend | HTML5 + Tailwind CSS + JavaScript (ES Modules) | UI responsiva sin build tools, módulos JS por servicio |
+| Control de versiones | Git + GitHub | Historial de commits, colaboración y entrega |
+| Entorno | venv (entorno virtual Python) | Aislamiento de dependencias |
 
 ---
 
@@ -116,31 +189,37 @@ Los flujos de negocio están modelados en cuatro diagramas BPMN ubicados en `Pro
 ```
 Proyecto-Olimpiadas/
 ├── README.md
-├── LICENSE
 ├── .gitignore
-├── app/                        # Aplicación Flask
-│   ├── app.py                  # Entry point — registra todos los blueprints
-│   ├── auth.py                 # Blueprint de autenticación
-│   ├── database.py             # Inicialización y conexión a SQLite
-│   ├── olimpiadas.db           # Base de datos SQLite
+├── app/                            # Aplicación Flask
+│   ├── app.py                      # Entry point — registra todos los blueprints
+│   ├── auth.py                     # Servicio de autenticación (JWT + bcrypt)
+│   ├── database.py                 # Inicialización y conexión SQLite
+│   ├── requirements.txt            # Dependencias Python
+│   ├── olimpiadas.db               # Base de datos SQLite (auto-generada)
 │   ├── servicios/
-│   │   ├── __init__.py
-│   │   ├── equipos.py          # Servicio de Equipos
-│   │   ├── deportistas.py      # Servicio de Deportistas
-│   │   ├── partidos.py         # Servicio de Partidos
-│   │   └── fixture.py          # Servicio de Fixture
+│   │   ├── equipos.py              # Servicio de Equipos
+│   │   ├── deportistas.py          # Servicio de Deportistas
+│   │   ├── partidos.py             # Servicio de Partidos
+│   │   └── fixture.py              # Servicio de Fixture
 │   ├── static/
-│   │   ├── css/style.css
 │   │   └── js/
-│   │       ├── main.js
-│   │       └── modules/        # Módulos JS por servicio
+│   │       ├── main.js             # Punto de entrada JS
+│   │       └── modules/            # Módulos ES por servicio
+│   │           ├── config.js
+│   │           ├── equipos.js
+│   │           ├── deportistas.js
+│   │           ├── fixture.js
+│   │           ├── partidos.js
+│   │           ├── usuarios.js
+│   │           ├── autocomplete.js
+│   │           └── ui.js
 │   └── templates/
-│       ├── index.html          # Interfaz principal
-│       └── login.html          # Página de autenticación
+│       ├── index.html              # Interfaz principal (Tailwind CSS)
+│       └── login.html              # Página de autenticación
 ├── docs/
-│   ├── bpmn/                   # Diagramas BPMN (.bpmn, .png, .svg) + README
-│   └── referencias/            # PDFs de referencias académicas
-└── venv/                       # Entorno virtual (ignorado por .gitignore)
+│   ├── bpmn/                       # Diagramas BPMN (.bpmn, .png, .svg)
+│   └── referencias/                # PDFs de referencias académicas
+└── silabus/                        # Sílabo oficial del curso
 ```
 
 ---
@@ -157,7 +236,7 @@ cd Proyecto-Olimpiadas
 ### 2. Crear y activar el entorno virtual
 
 ```bash
-python -m venv venv
+python3 -m venv venv
 
 # Linux / macOS
 source venv/bin/activate
@@ -169,7 +248,7 @@ venv\Scripts\activate
 ### 3. Instalar dependencias
 
 ```bash
-pip install flask flask-cors
+pip install -r app/requirements.txt
 ```
 
 ### 4. Ejecutar la aplicación
@@ -181,36 +260,58 @@ python app.py
 
 La aplicación estará disponible en `http://127.0.0.1:5000`
 
-> La base de datos `olimpiadas.db` se inicializa automáticamente al arrancar.
+> La base de datos `olimpiadas.db` se inicializa automáticamente al primer arranque con las tablas necesarias y un usuario `admin` / `admin123` para comenzar.
+
+### Credenciales por defecto
+
+| Usuario | Contraseña | Rol |
+|---------|-----------|-----|
+| `admin` | `admin123` | Administrador (acceso completo) |
+| `viewer` | `viewer123` | Visualizador (solo consulta) |
 
 ---
 
 ## Endpoints REST
 
+### Autenticación — `/auth`
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| POST | `/auth/login` | — | Iniciar sesión, retorna token JWT |
+| POST | `/auth/registro` | Admin | Registrar nuevo usuario |
+| GET | `/auth/usuarios` | Admin | Listar todos los usuarios |
+| DELETE | `/auth/usuarios/<id>` | Admin | Eliminar un usuario |
+
 ### Equipos — `/equipos`
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/equipos` | Listar todos los equipos |
-| POST | `/equipos` | Registrar un nuevo equipo |
-| DELETE | `/equipos/<id>` | Eliminar un equipo |
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| GET | `/equipos/` | — | Listar todos los equipos |
+| POST | `/equipos/` | Admin | Registrar un nuevo equipo |
+| DELETE | `/equipos/<id>` | Admin | Eliminar un equipo |
 
 ### Deportistas — `/deportistas`
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/deportistas/<equipo_id>` | Listar deportistas de un equipo |
-| POST | `/deportistas` | Inscribir un deportista |
-| DELETE | `/deportistas/<id>` | Eliminar inscripción |
 
-### Partidos — `/partidos`
-| Método | Ruta | Descripción |
-|---|---|---|
-| GET | `/partidos/<deporte>` | Consultar fixture por deporte |
-| POST | `/partidos/<id>/resultado` | Registrar resultado de un partido |
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| GET | `/deportistas/equipo/<id>` | — | Listar deportistas de un equipo |
+| POST | `/deportistas/inscribir` | Admin | Inscribir un deportista |
 
 ### Fixture — `/fixture`
-| Método | Ruta | Descripción |
-|---|---|---|
-| POST | `/fixture/generar` | Generar fixture para un deporte |
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| POST | `/fixture/generar/<deporte>` | Admin | Generar calendario para un deporte |
+| GET | `/fixture/consultar/<deporte>` | Token | Consultar partidos de un deporte |
+
+### Partidos — `/partidos`
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| POST | `/partidos/resultado` | Admin | Registrar resultado de un partido |
+| GET | `/partidos/tabla/<deporte>` | Token | Consultar tabla de posiciones |
+
+> **Auth:** `—` = público · `Token` = requiere JWT válido · `Admin` = requiere rol administrador
 
 ---
 
@@ -218,32 +319,66 @@ La aplicación estará disponible en `http://127.0.0.1:5000`
 
 | Actividad | S5 | S6 | S7 | S8 | S9 | S10 | S11 | S12 | S13 | S14 | S15 | S16 | S17 | S18 |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
-| Análisis y modelado BPMN | X | | | | | | | | | | | | | |
-| Diseño de servicios y arquitectura | X | X | | | | | | | | | | | | |
-| Configuración de entorno | | X | | | | | | | | | | | | |
-| Servicio de Equipos | | X | X | | | | | | | | | | | |
-| Servicio de Deportistas | | | X | X | | | | | | | | | | |
-| Servicio de Fixture | | | | X | X | | | | | | | | | |
-| Servicio de Partidos | | | | | X | X | | | | | | | | |
-| Pruebas unitarias e integración | | | | | | X | X | | | | | | | |
-| **APF2 (semana 10)** | | | | | | **X** | | | | | | | | |
-| Frontend (cliente web) | | | | | | | X | X | X | | | | | |
-| Pruebas de calidad | | | | | | | | | X | X | | | | |
-| **APF3 (semana 15)** | | | | | | | | | | | **X** | | | |
-| Documentación final | | | | | | | | | | | X | X | | |
+| Análisis y modelado BPMN | ✅ | | | | | | | | | | | | | |
+| Diseño de servicios y arquitectura | ✅ | ✅ | | | | | | | | | | | | |
+| **APF1** — documentación entregada | **✅** | | | | | | | | | | | | | |
+| Configuración de entorno y Git | | ✅ | | | | | | | | | | | | |
+| Autenticación JWT + bcrypt | | | ✅ | | | | | | | | | | | |
+| Servicio de Equipos | | ✅ | ✅ | | | | | | | | | | | |
+| Servicio de Deportistas | | | ✅ | ✅ | | | | | | | | | | |
+| Servicio de Fixture | | | | ✅ | ✅ | | | | | | | | | |
+| Servicio de Partidos | | | | | ✅ | ✅ | | | | | | | | |
+| Frontend (Tailwind + roles) | | | | ✅ | ✅ | ✅ | | | | | | | | |
+| Control de roles en UI y backend | | | | | | ✅ | | | | | | | | |
+| **APF2** — 30% funcionalidad | | | | | | **✅** | | | | | | | | |
+| Registro de servicios (UDDI-like) | | | | | | | X | | | | | | | |
+| Integración B2B / OpenAPI docs | | | | | | | | X | X | | | | | |
+| SOA + BPM: trazabilidad de procesos | | | | | | | | | X | X | | | | |
+| Mejores prácticas SOA | | | | | | | | | | X | X | | | |
+| **APF3** — 60% funcionalidad | | | | | | | | | | | **X** | | | |
+| Service Bus / auditoría | | | | | | | | | | | | X | X | |
 | Pruebas finales y correcciones | | | | | | | | | | | | X | X | |
-| **Entrega final (semana 18)** | | | | | | | | | | | | | | **X** |
+| **Proyecto Final** | | | | | | | | | | | | | | **X** |
+
+> ✅ = completado · X = planificado
+
+---
+
+## Plan APF3 (Semana 15)
+
+Según el sílabo (Unidad 3 — Semanas 11–15), los temas a abordar e implementar son:
+
+### Semana 11 — Implementación SOA: capas empresariales
+- Documentar las capas del sistema (presentación → servicio → datos)
+- Comenzar separación core/adaptadores (arquitectura hexagonal parcial)
+
+### Semana 12 — Registro de Servicios (concepto UDDI)
+- Implementar endpoint `GET /servicios` que liste todos los servicios disponibles con sus operaciones y contratos (registro interno tipo UDDI simplificado)
+
+### Semana 13 — Integración de procesos / B2B
+- Generar documentación OpenAPI (Swagger) de la API para consumo externo
+- Exponer un endpoint de metadatos que permita a sistemas externos descubrir los servicios
+
+### Semana 14 — SOA y BPM
+- Relacionar explícitamente cada proceso BPMN con su endpoint REST correspondiente en la documentación
+- Agregar trazabilidad: registrar en BD quién realizó cada operación (audit log básico)
+
+### Semana 15 — Integridad de procesos + Mejores prácticas SOA
+- Validaciones de integridad referencial más robustas
+- Manejo de errores estandarizado en todos los endpoints
+- Revisión de los 8 principios de diseño de servicios SOA aplicados al proyecto
+- **Entrega APF3**
 
 ---
 
 ## Referencias
 
 - Chamari, L., Petrova, E., & Pauwels, P. (2023). *An end-to-end implementation of a service-oriented architecture for data-driven smart buildings.* IEEE Access, 11, 117261–117281.
-- Delgado, A., García-Rodríguez de Guzmán, I., Ruiz, F., & Piattini, M. (2010). *Metodologías de desarrollo para Service Oriented Architectures con Rational Unified Process.* Revista Iberoamericana de Ingeniería de Software, 3(2), 125–136.
+- Delgado, A., García-Rodríguez de Guzmán, I., Ruiz, F., & Piattini, M. (2010). *Metodologías de desarrollo para Service Oriented Architectures con Rational Unified Process.*
 - López, D. J., Guerrero, J. A., & Díaz Benachí, E. (2014). *Arquitectura Orientada a Servicios - SOA, aplicada a la industria.* Corporación Universitaria Comfacauca.
 - Marante Valdivia, M. (2010). *Análisis y diseño de servicios en la adopción de una arquitectura orientada a servicios.* LACCEI 2010, Arequipa, Perú.
 - Mohor Tapia, C. A. (2006). *Análisis y diseño de una arquitectura SOA para una institución financiera.* PUCV.
 
 ---
 
-> Licencia: [MIT](LICENSE) · Proyecto académico de código abierto
+> Licencia: [MIT](LICENSE) · Proyecto académico — Universidad Tecnológica del Perú · 2026
