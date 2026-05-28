@@ -11,8 +11,8 @@ deportistas_bp = Blueprint("deportistas", __name__, url_prefix="/deportistas")
 @token_required
 def inscribir_deportista(current_user):
     """Inscribir un deportista en un equipo. Solo admins."""
-    if current_user["rol"] != "admin":
-        return jsonify({"error": "Solo los administradores pueden inscribir deportistas"}), 403
+    if current_user["rol"] not in ("admin", "operador"):
+        return jsonify({"error": "Se requiere rol operador o administrador"}), 403
     data = request.get_json()
     id_equipo = data.get("id_equipo")
     nombre = data.get("nombre")

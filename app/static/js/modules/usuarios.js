@@ -38,7 +38,9 @@ export async function listarUsuarios() {
       const esSoy = u.id === miId;
       const badgeColor = u.rol === "admin"
         ? "bg-yellow-100 text-yellow-800"
-        : "bg-blue-100 text-blue-700";
+        : u.rol === "operador"
+          ? "bg-green-100 text-green-800"
+          : "bg-blue-100 text-blue-700";
       const btnEliminar = esSoy
         ? `<span class="text-xs text-gray-400 italic">Tu cuenta</span>`
         : `<button

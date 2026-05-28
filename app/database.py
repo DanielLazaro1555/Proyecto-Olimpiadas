@@ -87,8 +87,9 @@ def _seed_usuarios():
         return
 
     usuarios_default = [
-        ("admin", "admin123", "admin"),
-        ("viewer", "viewer123", "visualizador"),
+        ("admin",    "admin123",    "admin"),
+        ("operador", "operador123", "operador"),
+        ("viewer",   "viewer123",   "visualizador"),
     ]
 
     with get_db() as conn:

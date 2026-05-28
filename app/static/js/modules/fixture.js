@@ -52,7 +52,7 @@ export async function consultarFixture(event) {
           ? `<span class="font-bold">${p.resultado_local} – ${p.resultado_visitante}</span>`
           : `<span class="text-gray-400 italic">Pendiente</span>`;
 
-      const esAdmin = localStorage.getItem("rol") === "admin";
+      const esAdmin = ["admin", "operador"].includes(localStorage.getItem("rol"));
       const accion =
         p.resultado_local !== null
           ? `<span class="text-green-600 font-medium text-xs">✓ Finalizado</span>`

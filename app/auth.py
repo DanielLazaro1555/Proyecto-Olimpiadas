@@ -108,7 +108,7 @@ def registrar(current_user):
         return jsonify({"error": "Usuario y contraseña requeridos"}), 400
     if len(password) < 6:
         return jsonify({"error": "La contraseña debe tener al menos 6 caracteres"}), 400
-    if rol not in ("admin", "visualizador"):
+    if rol not in ("admin", "operador", "visualizador"):
         return jsonify({"error": "Rol inválido"}), 400
 
     password_hash = bcrypt.hashpw(

@@ -11,8 +11,8 @@ equipos_bp = Blueprint("equipos", __name__, url_prefix="/equipos")
 @token_required
 def registrar_equipo(current_user):
     """Registrar un nuevo equipo. Solo admins."""
-    if current_user["rol"] != "admin":
-        return jsonify({"error": "Solo los administradores pueden registrar equipos"}), 403
+    if current_user["rol"] not in ("admin", "operador"):
+        return jsonify({"error": "Se requiere rol operador o administrador"}), 403
     data = request.get_json()
     pais = data.get("pais")
     deporte = data.get("deporte")
@@ -58,8 +58,8 @@ def consultar_equipos():
 @token_required
 def eliminar_equipo(current_user, equipo_id):
     """Elimina un equipo por ID. Solo admins."""
-    if current_user["rol"] != "admin":
-        return jsonify({"error": "Solo los administradores pueden eliminar equipos"}), 403
+    if current_user["rol"] not in ("admin", "operador"):
+        return jsonify({"error": "Se requiere rol operador o administrador"}), 403
     with db.get_db() as conn:
         cursor = conn.cursor()
 

@@ -14,8 +14,8 @@ fixture_bp = Blueprint("fixture", __name__, url_prefix="/fixture")
 @token_required
 def generar_fixture(deporte, current_user):
     """Genera enfrentamientos para un deporte. Solo admins."""
-    if current_user["rol"] != "admin":
-        return jsonify({"error": "Solo los administradores pueden generar el calendario"}), 403
+    if current_user["rol"] not in ("admin", "operador"):
+        return jsonify({"error": "Se requiere rol operador o administrador"}), 403
     with db.get_db() as conn:
         cursor = conn.cursor()
 

@@ -11,8 +11,8 @@ partidos_bp = Blueprint("partidos", __name__, url_prefix="/partidos")
 @token_required
 def registrar_resultado(current_user):
     """Registrar el resultado de un partido. Solo admins."""
-    if current_user["rol"] != "admin":
-        return jsonify({"error": "Solo los administradores pueden registrar resultados"}), 403
+    if current_user["rol"] not in ("admin", "operador"):
+        return jsonify({"error": "Se requiere rol operador o administrador"}), 403
     data = request.get_json()
     id_partido = data.get("id_partido")
     goles_local = data.get("goles_local")

@@ -339,8 +339,9 @@
                   required
                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 bg-white"
                 >
-                  <option value="visualizador">Visualizador — solo puede ver resultados</option>
-                  <option value="admin">Administrador — acceso completo</option>
+                  <option value="visualizador">Visualizador — solo consulta resultados y fixture</option>
+                  <option value="operador">Operador — gestiona equipos, deportistas y resultados</option>
+                  <option value="admin">Administrador — acceso completo + gestión de usuarios</option>
                 </select>
               </div>
               <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg text-sm transition">
@@ -389,38 +390,36 @@
       const rol = localStorage.getItem("rol") || "";
       document.getElementById("navUsername").textContent = username;
       const rolEl = document.getElementById("navRol");
-      rolEl.textContent = rol === "admin" ? "Admin" : "Visualizador";
-      rolEl.className += rol === "admin"
-        ? " ml-1 bg-yellow-500 text-yellow-900 text-xs px-2 py-0.5 rounded-full"
-        : " ml-1 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full";
+      const rolLabel = { admin: "Admin", operador: "Operador", visualizador: "Visualizador" };
+      const rolColor = {
+        admin:       " ml-1 bg-yellow-500 text-yellow-900 text-xs px-2 py-0.5 rounded-full",
+        operador:    " ml-1 bg-green-600 text-white text-xs px-2 py-0.5 rounded-full",
+        visualizador:" ml-1 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full",
+      };
+      rolEl.textContent = rolLabel[rol] || rol;
+      rolEl.className += rolColor[rol] || rolColor.visualizador;
 
       // Mostrar tab Administración solo para admin
       if (rol === "admin") {
         document.getElementById("tabAdminBtn").classList.remove("hidden");
       }
 
-      // Restricciones para visualizadores
-      if (rol !== "admin") {
-        // Mostrar banner de solo lectura y ocultar guía de pasos
+      // Restricciones para visualizadores (operador y admin tienen acceso operativo completo)
+      if (rol === "visualizador") {
         document.getElementById("bannerViewer").classList.remove("hidden");
         document.getElementById("guiaPasos").classList.add("hidden");
 
-        // Gestión: ocultar formulario de registro de equipos, conservar el listado
         const formEquipo = document.getElementById("formEquipo");
         if (formEquipo) {
           formEquipo.classList.add("hidden");
           const notice = document.createElement("p");
           notice.className = "text-xs text-gray-400 italic mb-3";
-          notice.textContent = "Solo los administradores pueden registrar equipos.";
+          notice.textContent = "Solo operadores y administradores pueden registrar equipos.";
           formEquipo.parentNode.insertBefore(notice, formEquipo);
         }
 
-        // Gestión: ocultar tarjeta de inscripción de deportistas
         document.getElementById("cardInscribirDeportista")?.classList.add("hidden");
-
-        // Competencia: ocultar tarjeta de generar fixture
         document.getElementById("cardGenerarFixture")?.classList.add("hidden");
-
       }
 
       // Logout
@@ -452,7 +451,7 @@
 
       // Función global para abrir el formulario de resultado desde la tabla
       window.mostrarFormularioResultado = function (partidoId) {
-        if (localStorage.getItem("rol") !== "admin") return;
+        if (!["admin", "operador"].includes(localStorage.getItem("rol"))) return;
         const card = document.getElementById("resultadoCard");
         document.getElementById("idPartido").value = partidoId;
         card.classList.remove("hidden");
