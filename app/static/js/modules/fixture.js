@@ -1,30 +1,79 @@
 // fixture.js
 
 import { API_BASE } from "./config.js";
-import { showMessage } from "./ui.js";
+import { showMessage, btnLoading } from "./ui.js";
 
 export async function generarFixture(event) {
   event.preventDefault();
   const deporte = document.getElementById("deporteFixture").value.trim();
+  if (!deporte) { showMessage("fixtureResultado", "❌ Selecciona un deporte."); return; }
+
+  const btn     = event.submitter;
+  const restore = btnLoading(btn, "Generando...");
 
   try {
-    const res = await window.authFetch(
+    const res  = await window.authFetch(
       `${API_BASE}/fixture/generar/${encodeURIComponent(deporte)}`,
       { method: "POST" },
     );
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Error generando calendario");
+
+    if (!res.ok) {
+      // Si ya existe, ofrecer opción de regenerar
+      if (res.status === 409) {
+        document.getElementById("fixtureResultado").innerHTML = `
+          <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm px-4 py-3 rounded-lg">
+            ⚠️ Ya existe un calendario para <strong>${deporte}</strong>.
+            <button id="btnRegenerar"
+              class="ml-2 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold px-3 py-1 rounded-lg transition">
+              Eliminar y regenerar
+            </button>
+          </div>`;
+        document.getElementById("btnRegenerar").addEventListener("click", () =>
+          _eliminarYRegererar(deporte)
+        );
+        return;
+      }
+      throw new Error(data.error || "Error generando calendario");
+    }
 
     let msg = `✅ ${data.mensaje} — ${data.total_partidos} partidos generados`;
     if (data.partidos?.length) {
       const lista = data.partidos
-        .map((p) => `<li class="py-0.5">${p.local} <span class="font-bold text-gray-500">vs</span> ${p.visitante} · ${p.fecha} ${p.hora}</li>`)
+        .map(p => `<li class="py-0.5">${p.local} <span class="text-gray-400">vs</span> ${p.visitante} &nbsp;·&nbsp; ${p.fecha} ${p.hora}</li>`)
         .join("");
-      msg += `<ul class="mt-2 ml-2 list-disc list-inside text-gray-700">${lista}</ul>`;
+      msg += `<ul class="mt-2 ml-2 list-disc list-inside text-gray-700 text-xs">${lista}</ul>`;
     }
     showMessage("fixtureResultado", msg, false);
   } catch (err) {
     showMessage("fixtureResultado", `❌ ${err.message}`);
+  } finally {
+    restore();
+  }
+}
+
+async function _eliminarYRegererar(deporte) {
+  const btn     = document.getElementById("btnRegenerar");
+  const restore = btnLoading(btn, "Procesando...");
+  try {
+    const del = await window.authFetch(
+      `${API_BASE}/fixture/eliminar/${encodeURIComponent(deporte)}`,
+      { method: "DELETE" },
+    );
+    if (!del.ok) throw new Error("No se pudo eliminar el calendario anterior");
+
+    const gen  = await window.authFetch(
+      `${API_BASE}/fixture/generar/${encodeURIComponent(deporte)}`,
+      { method: "POST" },
+    );
+    const data = await gen.json();
+    if (!gen.ok) throw new Error(data.error || "Error regenerando");
+
+    showMessage("fixtureResultado", `✅ Calendario regenerado — ${data.total_partidos} partidos`, false);
+  } catch (err) {
+    showMessage("fixtureResultado", `❌ ${err.message}`);
+  } finally {
+    restore();
   }
 }
 
@@ -59,8 +108,8 @@ export async function consultarFixture(event) {
           : esAdmin
             ? `<button
                  class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium px-3 py-1 rounded-lg transition"
-                 onclick="window.mostrarFormularioResultado(${p.id})"
-               >Registrar resultado</button>`
+                 onclick="window.mostrarFormularioResultado(${p.id}, '${p.local}', '${p.visitante}')"
+               >Registrar</button>`
             : `<span class="text-gray-400 text-xs italic">Solo lectura</span>`;
 
       return `

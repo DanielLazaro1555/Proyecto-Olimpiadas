@@ -1,7 +1,7 @@
 // main.js — punto de entrada principal
 
 import { registrarEquipo, listarEquipos, eliminarEquipo } from "./modules/equipos.js";
-import { inscribirDeportista } from "./modules/deportistas.js";
+import { inscribirDeportista, listarDeportistas } from "./modules/deportistas.js";
 import { generarFixture, consultarFixture } from "./modules/fixture.js";
 import { registrarResultado, mostrarTabla } from "./modules/partidos.js";
 import { cargarSugerencias } from "./modules/autocomplete.js";
@@ -45,6 +45,12 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnListarEquipos")?.addEventListener("click", listarEquipos);
   document.getElementById("formDeportista")?.addEventListener("submit", inscribirDeportista);
 
+  // Al cambiar el equipo en el select, cargar sus deportistas automáticamente
+  document.getElementById("equipoId")?.addEventListener("change", (e) => {
+    const id = parseInt(e.target.value);
+    listarDeportistas(id || null);
+  });
+
   // Formularios de competencia
   document.getElementById("formFixture")?.addEventListener("submit", generarFixture);
   document.getElementById("formConsultarFixture")?.addEventListener("submit", consultarFixture);
@@ -53,14 +59,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Tabla de clasificación
   document.getElementById("formTabla")?.addEventListener("submit", mostrarTabla);
 
-  // Administración (solo admin — el tab está oculto para viewers)
+  // Administración (solo admin)
   document.getElementById("formUsuario")?.addEventListener("submit", registrarUsuario);
   document.getElementById("btnRefrescarUsuarios")?.addEventListener("click", listarUsuarios);
 
-  // Cargar sugerencias (datalists + select de equipos)
+  // Cargar sugerencias (selects de equipos y deportes)
   cargarSugerencias();
 
-  // Si es admin, cargar la lista de usuarios al entrar al tab
+  // Si es admin, cargar lista de usuarios al iniciar
   if (localStorage.getItem("rol") === "admin") {
     listarUsuarios();
   }
