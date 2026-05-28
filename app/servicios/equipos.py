@@ -14,26 +14,26 @@ def registrar_equipo(current_user):
     if current_user["rol"] not in ("admin", "operador"):
         return jsonify({"error": "Se requiere rol operador o administrador"}), 403
     data = request.get_json()
-    pais = data.get("pais")
+    region = data.get("region")
     deporte = data.get("deporte")
     nombre_equipo = data.get("nombre_equipo")
 
-    if not all([pais, deporte, nombre_equipo]):
+    if not all([region, deporte, nombre_equipo]):
         return jsonify({"error": "Faltan campos requeridos"}), 400
 
     with db.get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT id FROM equipos WHERE pais = ? AND deporte = ?", (pais, deporte)
+            "SELECT id FROM equipos WHERE region = ? AND deporte = ?", (region, deporte)
         )
         if cursor.fetchone():
             return jsonify(
-                {"error": "Ya existe un equipo de ese país en este deporte"}
+                {"error": "Ya existe un equipo de esa región en este deporte"}
             ), 409
 
         cursor.execute(
-            "INSERT INTO equipos (pais, deporte, nombre_equipo) VALUES (?, ?, ?)",
-            (pais, deporte, nombre_equipo),
+            "INSERT INTO equipos (region, deporte, nombre_equipo) VALUES (?, ?, ?)",
+            (region, deporte, nombre_equipo),
         )
         conn.commit()
         nuevo_id = cursor.lastrowid
@@ -49,7 +49,7 @@ def consultar_equipos():
     """
     with db.get_db() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT id, pais, deporte, nombre_equipo FROM equipos")
+        cursor.execute("SELECT id, region, deporte, nombre_equipo FROM equipos")
         equipos = [dict(row) for row in cursor.fetchall()]
     return jsonify(equipos), 200
 

@@ -6,11 +6,11 @@ import { cargarSugerencias } from "./autocomplete.js";
 
 export async function registrarEquipo(event) {
   event.preventDefault();
-  const pais         = document.getElementById("pais").value.trim();
+  const region       = document.getElementById("region").value.trim();
   const deporte      = document.getElementById("deporteEquipo").value.trim();
   const nombre_equipo = document.getElementById("nombreEquipo").value.trim();
 
-  if (!pais)    { showMessage("equipoResultado", "❌ Selecciona un país."); return; }
+  if (!region)  { showMessage("equipoResultado", "❌ Selecciona una región."); return; }
   if (!deporte) { showMessage("equipoResultado", "❌ Selecciona un deporte."); return; }
 
   const btn     = event.submitter;
@@ -19,7 +19,7 @@ export async function registrarEquipo(event) {
   try {
     const res = await window.authFetch(`${API_BASE}/equipos/`, {
       method: "POST",
-      body: JSON.stringify({ pais, deporte, nombre_equipo }),
+      body: JSON.stringify({ region, deporte, nombre_equipo }),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Error al registrar");
@@ -63,7 +63,7 @@ export async function listarEquipos() {
       const filas = lista.map(eq => `
         <tr class="hover:bg-gray-50 border-b border-gray-100">
           <td class="px-3 py-2 font-medium text-gray-800">${eq.nombre_equipo}</td>
-          <td class="px-3 py-2 text-gray-600">${eq.pais}</td>
+          <td class="px-3 py-2 text-gray-600">${eq.region}</td>
           <td class="px-3 py-2 text-center">
             ${puedeEliminar
               ? `<button onclick="window.eliminarEquipo(${eq.id}, '${eq.nombre_equipo}')"
@@ -81,7 +81,7 @@ export async function listarEquipos() {
             <thead class="bg-gray-50 text-gray-500 text-xs">
               <tr>
                 <th class="px-3 py-2 text-left">Nombre del equipo</th>
-                <th class="px-3 py-2 text-left">País</th>
+                <th class="px-3 py-2 text-left">Región</th>
                 <th class="px-3 py-2 text-center w-24"></th>
               </tr>
             </thead>

@@ -22,10 +22,10 @@ def init_db():
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS equipos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                pais TEXT NOT NULL,
+                region TEXT NOT NULL,
                 deporte TEXT NOT NULL,
                 nombre_equipo TEXT NOT NULL,
-                UNIQUE(pais, deporte)
+                UNIQUE(region, deporte)
             )
         """)
 

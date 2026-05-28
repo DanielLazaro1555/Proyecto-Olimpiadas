@@ -4,19 +4,16 @@ import { API_BASE } from "./config.js";
 import { initSearchSelect } from "./searchSelect.js";
 
 export async function cargarSugerencias() {
-  // ── 1. Cargar JSON de países y deportes en paralelo ──────────────────────
-  const [paisesRes, deportesRes] = await Promise.all([
-    fetch("/static/data/paises.json"),
+  // ── 1. Cargar JSON de regiones y deportes en paralelo ────────────────────
+  const [regionesRes, deportesRes] = await Promise.all([
+    fetch("/static/data/regiones.json"),
     fetch("/static/data/deportes.json"),
   ]);
-  const paises   = await paisesRes.json();
+  const regiones = await regionesRes.json();
   const deportes = await deportesRes.json();
-  const nombresDeportes = deportes.map((d) => `${d.nombre} — ${d.categoria}`);
-  // Valor que se guarda (sin la categoría) para que coincida con lo que espera la API
-  const valoresDeportes = deportes.map((d) => d.nombre);
 
-  // ── 2. SearchSelect para PAÍS (formulario de equipo) ─────────────────────
-  initSearchSelect("pais", paises, "Escribe el país...");
+  // ── 2. SearchSelect para REGIÓN (formulario de equipo) ───────────────────
+  initSearchSelect("region", regiones, "Escribe la región...");
 
   // ── 3. SearchSelect para DEPORTE en formulario de equipo ─────────────────
   // Usamos los nombres simples como valores y las etiquetas con categoría de display
@@ -36,7 +33,7 @@ export async function cargarSugerencias() {
     const selectEquipo = document.getElementById("equipoId");
     if (selectEquipo) {
       const opciones = equipos
-        .map((e) => `<option value="${e.id}">${e.nombre_equipo} — ${e.pais} (${e.deporte})</option>`)
+        .map((e) => `<option value="${e.id}">${e.nombre_equipo} — ${e.region} (${e.deporte})</option>`)
         .join("");
       selectEquipo.innerHTML =
         '<option value="">-- Selecciona un equipo --</option>' + opciones;

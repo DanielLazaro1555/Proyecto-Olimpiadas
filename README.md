@@ -28,7 +28,9 @@
 
 ## Descripción
 
-Sistema de gestión de eventos deportivos basado en **Arquitectura Orientada a Servicios (SOA)**. Modulariza los procesos críticos de las Olimpiadas Perú en servicios independientes y reutilizables, expuestos mediante APIs RESTful y consumidos por un cliente web.
+Sistema de gestión de eventos deportivos basado en **Arquitectura Orientada a Servicios (SOA)**. Modulariza los procesos críticos de las **Olimpiadas Perú** —competencia deportiva **interna a nivel nacional**— en servicios independientes y reutilizables, expuestos mediante APIs RESTful y consumidos por un cliente web.
+
+Cada equipo representa una de las **25 regiones del Perú** (Amazonas, Áncash, Arequipa, Lima, etc.). No es una competencia internacional; los participantes son delegaciones regionales peruanas.
 
 Los cuatro deportes obligatorios son:
 
@@ -51,7 +53,7 @@ La gestión tradicional de eventos deportivos a gran escala depende de procesos 
 
 ## Solución propuesta
 
-Sistema *API-first* basado en SOA que desacopla la lógica de negocio en cuatro servicios independientes con contratos de interfaz claros. Cada servicio evoluciona de forma autónoma sin afectar al sistema completo. Incluye autenticación JWT con roles (admin / visualizador) para control de acceso.
+Sistema *API-first* basado en SOA que desacopla la lógica de negocio en cuatro servicios independientes con contratos de interfaz claros. Cada servicio evoluciona de forma autónoma sin afectar al sistema completo. Incluye autenticación JWT con tres roles (admin / operador / visualizador) para control de acceso diferenciado.
 
 ---
 
@@ -72,7 +74,7 @@ Gestiona los equipos participantes.
 
 | Operación | Descripción |
 |---|---|
-| `registrarEquipo(pais, deporte, nombreEquipo)` | Registra un equipo con validación de unicidad (solo admin) |
+| `registrarEquipo(region, deporte, nombreEquipo)` | Registra un equipo con validación de unicidad por región (solo admin/operador) |
 | `consultarEquipos()` | Devuelve el listado completo de equipos |
 | `eliminarEquipo(idEquipo)` | Elimina un equipo si no tiene partidos asignados (solo admin) |
 
@@ -163,7 +165,7 @@ Los flujos de negocio están modelados en cuatro diagramas ubicados en `docs/bpm
 
 | Diagrama | Descripción |
 |---|---|
-| [Registrar equipo](docs/bpmn/Diagrama_1_Registrar_equipo.png) | Valida unicidad por país y deporte antes de guardar |
+| [Registrar equipo](docs/bpmn/Diagrama_1_Registrar_equipo.png) | Valida unicidad por región y deporte antes de guardar |
 | [Inscribir deportista](docs/bpmn/Diagrama_2_Inscribir_deportista.png) | Valida que el deportista no esté ya inscrito |
 | [Registrar resultado](docs/bpmn/Diagrama_3_Registrar_resultado.png) | Solo permite registrar si el partido no tiene resultado previo |
 | [Generar fixture](docs/bpmn/Diagrama_4_Generar_fixture_simple.png) | Solo genera si hay al menos 2 equipos en el deporte |
