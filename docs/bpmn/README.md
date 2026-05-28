@@ -65,7 +65,7 @@ Se propone un sistema basado en SOA que modularice los procesos críticos de las
 
 1. Diagrama 1: Registrar equipo  
    ![][image2]  
-   *“Diagrama 1 \- Se inicia el proceso ingresando valores como país, deporte y nombre del equipo. Luego el sistema verifica si ya existe un equipo del mismo país en ese deporte. **Si NO existe**, se guarda el equipo en la base de datos y se confirma el registro exitoso. **Si SÍ existe**, se muestra un mensaje de error y se regresa al paso de ingresar datos para corregir o intentar con otro país/deporte.”*  
+   *“Diagrama 1 \- Se inicia el proceso ingresando valores como región, deporte y nombre del equipo. Luego el sistema verifica si ya existe un equipo de la misma región en ese deporte. **Si NO existe**, se guarda el equipo en la base de datos y se confirma el registro exitoso. **Si SÍ existe**, se muestra un mensaje de error y se regresa al paso de ingresar datos para corregir o intentar con otra región/deporte.”*  
      
      
      
@@ -93,8 +93,8 @@ A partir del análisis de los procesos modelados en BPMN (registro de equipos, i
 
 Gestiona toda la información relacionada con los equipos participantes. Sus operaciones principales son:
 
-* `registrarEquipo(pais, deporte, nombreEquipo)`: guarda un nuevo equipo en la base de datos, previa validación de unicidad.  
-* `verificarExistencia(pais, deporte)`: comprueba si ya existe un equipo del mismo país en el deporte indicado. Retorna `true` o `false`.  
+* `registrarEquipo(region, deporte, nombreEquipo)`: guarda un nuevo equipo en la base de datos, previa validación de unicidad.  
+* `verificarExistencia(region, deporte)`: comprueba si ya existe un equipo de la misma región en el deporte indicado. Retorna `true` o `false`.  
 * `consultarEquipos()`: devuelve el listado completo de equipos registrados.  
 * `eliminarEquipo(idEquipo)`: elimina un equipo existente (solo si no tiene partidos asignados).
 

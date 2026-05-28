@@ -170,6 +170,24 @@ Los flujos de negocio están modelados en cuatro diagramas ubicados en `docs/bpm
 | [Registrar resultado](docs/bpmn/Diagrama_3_Registrar_resultado.png) | Solo permite registrar si el partido no tiene resultado previo |
 | [Generar fixture](docs/bpmn/Diagrama_4_Generar_fixture_simple.png) | Solo genera si hay al menos 2 equipos en el deporte |
 
+### Detalle de los Diagramas de Procesos
+
+#### 1. Registrar equipo
+![Registrar equipo](docs/bpmn/Diagrama_1_Registrar_equipo.png)
+> *Se inicia el proceso ingresando valores como región, deporte y nombre del equipo. Luego el sistema verifica si ya existe un equipo de la misma región en ese deporte. **Si NO existe**, se guarda el equipo en la base de datos y se confirma el registro exitoso. **Si SÍ existe**, se muestra un mensaje de error y se regresa al paso de ingresar datos para corregir o intentar con otra región/deporte.*
+
+#### 2. Inscribir deportista
+![Inscribir deportista](docs/bpmn/Diagrama_2_Inscribir_deportista.png)
+> *Se inicia el proceso seleccionando un equipo ya registrado. Luego se ingresan los datos del deportista. El sistema verifica si ese deportista ya está inscrito en el equipo seleccionado. **Si NO existe** (es decir, el deportista no está aún en ese equipo), se guarda la inscripción y se confirma el registro exitoso. **Si SÍ existe**, se muestra un mensaje de error (deportista duplicado) y se regresa a la selección del equipo para reiniciar el proceso.*
+
+#### 3. Registrar resultado
+![Registrar resultado](docs/bpmn/Diagrama_3_Registrar_resultado.png)
+> *Se inicia el proceso seleccionando un partido del fixture previamente generado. Luego se ingresa el marcador (goles o puntos). El sistema verifica si ese partido ya tiene un resultado registrado. **Si NO existe** (aún no se ha registrado resultado), se guarda el marcador y se actualiza automáticamente la tabla de posiciones. **Si SÍ existe**, se muestra un mensaje de error indicando que no se puede sobrescribir el resultado y el proceso termina sin cambios.*
+
+#### 4. Generar fixture
+![Generar fixture](docs/bpmn/Diagrama_4_Generar_fixture_simple.png)
+> *Se inicia el proceso cuando el usuario solicita el sorteo para un deporte específico. El sistema cuenta cuántos equipos están inscritos en ese deporte. **Si hay al menos 2 equipos**, se generan enfrentamientos aleatorios, se asignan fechas y horas básicas, se guarda el fixture y se notifica a los equipos. **Si hay menos de 2 equipos**, se muestra un mensaje de error (equipos insuficientes) y el proceso termina sin generar fixture.*
+
 ---
 
 ## Tecnologías
