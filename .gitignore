@@ -1,0 +1,52 @@
+# Entorno virtual
+venv/
+.venv/
+env/
+
+# Caché de Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Distribuciones / builds
+build/
+dist/
+*.egg-info/
+*.egg
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Variables de entorno / secretos (usar .env.example como plantilla)
+.env
+.env.*
+*.key
+
+# Logs
+*.log
+
+# Pytest
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Nota: olimpiadas.db se incluye intencionalmente en el repositorio
+# porque es una base de datos pequeña de desarrollo necesaria para el proyecto.
+
+# Carpeta interna de clases/validador (no parte del entregable)
+clases/

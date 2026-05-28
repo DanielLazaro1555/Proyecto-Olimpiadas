@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Olimpiadas Perú</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="bg-blue-900 text-white shadow-lg">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🏅</span>
+          <div>
+            <span class="font-bold text-lg leading-none">Olimpiadas Perú</span>
+            <span class="block text-blue-300 text-xs">Sistema de Gestión Deportiva</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-blue-200 hidden sm:block">
+            Bienvenido, <strong id="navUsername" class="text-white"></strong>
+            <span id="navRol" class="ml-1 bg-blue-700 text-xs px-2 py-0.5 rounded-full"></span>
+          </span>
+          <button
+            id="logoutBtn"
+            class="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-4 py-1.5 rounded-lg transition"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-6">
+
+      <!-- Banner solo lectura (visible solo para visualizadores) -->
+      <div id="bannerViewer" class="hidden bg-amber-50 border-l-4 border-amber-400 rounded-xl p-4 mb-6 shadow-sm">
+        <p class="text-sm font-semibold text-amber-800">👁️ Modo visualización</p>
+        <p class="text-xs text-amber-700 mt-0.5">Tu cuenta solo permite consultar resultados y el calendario. Contacta a un administrador para realizar cambios.</p>
+      </div>
+
+      <!-- Guía de pasos (solo admin) -->
+      <div id="guiaPasos" class="bg-blue-50 border-l-4 border-blue-500 rounded-xl p-4 mb-6 shadow-sm">
+        <p class="text-sm font-semibold text-blue-800 mb-2">📋 Sigue este orden para evitar errores:</p>
+        <ol class="flex flex-wrap gap-2 text-sm text-blue-900">
+          <li class="bg-white border border-blue-200 px-3 py-1 rounded-full shadow-sm">1. Registrar equipos</li>
+          <li class="text-blue-400">→</li>
+          <li class="bg-white border border-blue-200 px-3 py-1 rounded-full shadow-sm">2. Inscribir deportistas</li>
+          <li class="text-blue-400">→</li>
+          <li class="bg-white border border-blue-200 px-3 py-1 rounded-full shadow-sm">3. Generar calendario</li>
+          <li class="text-blue-400">→</li>
+          <li class="bg-white border border-blue-200 px-3 py-1 rounded-full shadow-sm">4. Registrar resultados</li>
+          <li class="text-blue-400">→</li>
+          <li class="bg-white border border-blue-200 px-3 py-1 rounded-full shadow-sm">5. Ver clasificación</li>
+        </ol>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex gap-2 mb-6 border-b border-gray-300 flex-wrap">
+        <button class="tab-btn px-5 py-2.5 font-semibold text-sm rounded-t-lg border-b-2 border-blue-600 text-blue-700 bg-white" data-tab="gestion">
+          👥 Gestión
+        </button>
+        <button class="tab-btn px-5 py-2.5 font-semibold text-sm rounded-t-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition" data-tab="competencia">
+          📅 Competencia
+        </button>
+        <button class="tab-btn px-5 py-2.5 font-semibold text-sm rounded-t-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition" data-tab="clasificacion">
+          🏆 Clasificación
+        </button>
+        <!-- Tab Administración: solo visible para admin -->
+        <button id="tabAdminBtn" class="tab-btn hidden px-5 py-2.5 font-semibold text-sm rounded-t-lg border-b-2 border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition" data-tab="administracion">
+          ⚙️ Administración
+        </button>
+      </div>
+
+      <!-- TAB: Gestión -->
+      <div id="gestion" class="tab-content">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          <!-- Registrar equipo -->
+          <div id="cardRegistrarEquipo" class="bg-white rounded-2xl shadow p-6">
+            <h2 class="text-lg font-bold text-gray-800 border-l-4 border-blue-500 pl-3 mb-4">
+              👥 Registrar equipo
+            </h2>
+            <form id="formEquipo" class="space-y-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">País</label>
+                <input
+                  id="pais"
+                  type="text"
+                  placeholder="Ej: Perú"
+                  list="listaPaises"
+                  autocomplete="off"
+                  required
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+                <datalist id="listaPaises">
+                  <option value="Perú"></option>
+                  <option value="Chile"></option>
+                  <option value="Argentina"></option>
+                  <option value="Brasil"></option>
+                  <option value="Uruguay"></option>
+                  <option value="Colombia"></option>
+                  <option value="Ecuador"></option>
+                  <option value="Bolivia"></option>
+                  <option value="Paraguay"></option>
+                  <option value="Venezuela"></option>
+                </datalist>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Deporte</label>
+                <input
+                  id="deporteEquipo"
+                  type="text"
+                  placeholder="Ej: Fútbol"
+                  list="deportesObligatorios"
+                  autocomplete="off"
+                  required
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+                <datalist id="deportesObligatorios">
+                  <option value="Fútbol"></option>
+                  <option value="Básquet"></option>
+                  <option value="Vóley"></option>
+                  <option value="Ping-Pong"></option>
+                </datalist>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del equipo</label>
+                <input
+                  id="nombreEquipo"
+                  type="text"
+                  placeholder="Ej: Los Cóndores"
+                  autocomplete="off"
+                  required
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                />
+              </div>
+              <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg text-sm transition">
+                ✚ Registrar equipo
+              </button>
+            </form>
+            <div id="equipoResultado" class="mt-3 text-sm"></div>
+
+            <hr class="my-4 border-gray-100" />
+
+            <button id="btnListarEquipos" class="w-full bg-gray-700 hover:bg-gray-800 text-white font-medium py-2 rounded-lg text-sm transition">
+              📋 Ver equipos registrados
+            </button>
+            <div id="listaEquipos" class="mt-3 overflow-x-auto"></div>
+          </div>
+
+          <!-- Inscribir deportista -->
+          <div id="cardInscribirDeportista" class="bg-white rounded-2xl shadow p-6">
+            <h2 class="text-lg font-bold text-gray-800 border-l-4 border-green-500 pl-3 mb-4">
+              🏃 Inscribir deportista
+            </h2>
+            <form id="formDeportista" class="space-y-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Equipo</label>
+                <select
+                  id="equipoId"
+                  required
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400 bg-white"
+                >
+                  <option value="">-- Selecciona un equipo --</option>
+                </select>
+                <p class="text-xs text-gray-400 mt-1">Si no aparece el equipo, regístralo primero.</p>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                  <input
+                    id="nombreDeportista"
+                    type="text"
+                    placeholder="Ej: Carlos"
+                    required
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
+                  <input
+                    id="apellidoDeportista"
+                    type="text"
+                    placeholder="Ej: Gómez"
+                    required
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                  />
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Documento de identidad</label>
+                <input
+                  id="documento"
+                  type="text"
+                  placeholder="Ej: 12345678"
+                  required
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400"
+                />
+              </div>
+              <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded-lg text-sm transition">
+                ✚ Inscribir deportista
+              </button>
+            </form>
+            <div id="deportistaResultado" class="mt-3 text-sm"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TAB: Competencia -->
+      <div id="competencia" class="tab-content hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          <!-- Generar calendario -->
+          <div id="cardGenerarFixture" class="bg-white rounded-2xl shadow p-6">
+            <h2 class="text-lg font-bold text-gray-800 border-l-4 border-purple-500 pl-3 mb-1">
+              🎲 Generar calendario de partidos
+            </h2>
+            <p class="text-xs text-gray-500 mb-4">Crea los enfrentamientos de forma aleatoria. Necesitas al menos 2 equipos registrados en el deporte.</p>
+            <form id="formFixture" class="flex gap-2">
+              <input
+                id="deporteFixture"
+                type="text"
+                placeholder="Deporte (ej: Fútbol)"
+                list="deportesList"
+                autocomplete="off"
+                required
+                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400"
+              />
+              <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition whitespace-nowrap">
+                Generar
+              </button>
+            </form>
+            <div id="fixtureResultado" class="mt-3 text-sm"></div>
+          </div>
+
+          <!-- Consultar calendario -->
+          <div class="bg-white rounded-2xl shadow p-6">
+            <h2 class="text-lg font-bold text-gray-800 border-l-4 border-orange-500 pl-3 mb-1">
+              📅 Consultar partidos
+            </h2>
+            <p class="text-xs text-gray-500 mb-4">Ver el calendario generado y registrar resultados de cada partido.</p>
+            <form id="formConsultarFixture" class="flex gap-2">
+              <input
+                id="deporteConsultar"
+                type="text"
+                placeholder="Deporte (ej: Fútbol)"
+                list="deportesList"
+                autocomplete="off"
+                required
+                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+              <button type="submit" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-4 py-2 rounded-lg text-sm transition whitespace-nowrap">
+                Consultar
+              </button>
+            </form>
+            <div id="fixtureListado" class="mt-4 overflow-x-auto text-sm"></div>
+          </div>
+
+        </div>
+
+        <!-- Registrar resultado (aparece al hacer clic en un partido) -->
+        <div id="resultadoCard" class="hidden mt-6 bg-white rounded-2xl shadow p-6 border-l-4 border-yellow-400">
+          <h2 class="text-lg font-bold text-gray-800 mb-4">⚽ Registrar resultado del partido</h2>
+          <form id="formResultado" class="flex flex-wrap items-end gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">N° de partido</label>
+              <input
+                id="idPartido"
+                type="number"
+                readonly
+                class="w-24 border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm text-gray-500"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Goles local</label>
+              <input
+                id="golesLocal"
+                type="number"
+                min="0"
+                placeholder="0"
+                required
+                class="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Goles visitante</label>
+              <input
+                id="golesVisitante"
+                type="number"
+                min="0"
+                placeholder="0"
+                required
+                class="w-24 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              />
+            </div>
+            <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-6 py-2 rounded-lg text-sm transition">
+              💾 Guardar resultado
+            </button>
+            <button type="button" id="cancelarResultado" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium px-4 py-2 rounded-lg text-sm transition">
+              Cancelar
+            </button>
+          </form>
+          <div id="resultadoRegistro" class="mt-3 text-sm"></div>
+        </div>
+      </div>
+
+      <!-- TAB: Clasificación -->
+      <div id="clasificacion" class="tab-content hidden">
+        <div class="bg-white rounded-2xl shadow p-6">
+          <h2 class="text-lg font-bold text-gray-800 border-l-4 border-yellow-500 pl-3 mb-4">
+            🏆 Tabla de clasificación
+          </h2>
+          <form id="formTabla" class="flex gap-2 mb-4">
+            <input
+              id="deporteTabla"
+              type="text"
+              placeholder="Deporte (ej: Fútbol)"
+              list="deportesList"
+              autocomplete="off"
+              required
+              class="flex-1 max-w-xs border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400"
+            />
+            <button type="submit" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-5 py-2 rounded-lg text-sm transition">
+              Mostrar
+            </button>
+          </form>
+          <div id="tablaPosiciones" class="overflow-x-auto text-sm"></div>
+        </div>
+      </div>
+
+    </div>
+
+      <!-- TAB: Administración (solo admin) -->
+      <div id="administracion" class="tab-content hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          <!-- Registrar nuevo usuario -->
+          <div class="bg-white rounded-2xl shadow p-6">
+            <h2 class="text-lg font-bold text-gray-800 border-l-4 border-red-500 pl-3 mb-1">
+              👤 Registrar nuevo usuario
+            </h2>
+            <p class="text-xs text-gray-500 mb-4">Crea cuentas para administradores o visualizadores del sistema.</p>
+            <form id="formUsuario" class="space-y-3">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de usuario</label>
+                <input
+                  id="nuevoUsername"
+                  type="text"
+                  placeholder="Ej: arbitro01"
+                  autocomplete="off"
+                  required
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+                <input
+                  id="nuevoPassword"
+                  type="password"
+                  placeholder="Mínimo 6 caracteres"
+                  required
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                <select
+                  id="nuevoRol"
+                  required
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 bg-white"
+                >
+                  <option value="visualizador">Visualizador — solo puede ver resultados</option>
+                  <option value="admin">Administrador — acceso completo</option>
+                </select>
+              </div>
+              <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg text-sm transition">
+                ✚ Crear usuario
+              </button>
+            </form>
+            <div id="usuarioResultado" class="mt-3 text-sm"></div>
+          </div>
+
+          <!-- Lista de usuarios -->
+          <div class="bg-white rounded-2xl shadow p-6">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-lg font-bold text-gray-800 border-l-4 border-gray-400 pl-3">
+                👥 Usuarios del sistema
+              </h2>
+              <button
+                id="btnRefrescarUsuarios"
+                class="bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-medium px-3 py-1.5 rounded-lg transition"
+              >
+                🔄 Actualizar
+              </button>
+            </div>
+            <div id="listaUsuarios" class="overflow-x-auto text-sm">
+              <p class="text-gray-400 text-sm">Cargando usuarios...</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    <!-- datalists dinámicos -->
+    <datalist id="deportesList"></datalist>
+    <datalist id="equiposList"></datalist>
+
+    <!-- Loader global -->
+    <div id="global-loader" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+      <div class="bg-white rounded-xl px-6 py-4 flex items-center gap-3 shadow-xl">
+        <span class="animate-spin text-2xl">⏳</span>
+        <span class="text-gray-700 font-medium">Cargando...</span>
+      </div>
+    </div>
+
+    <script>
+      // Auth guard
+      const token = localStorage.getItem("token");
+      if (!token) window.location.href = "/login";
+
+      // Mostrar usuario en navbar
+      const username = localStorage.getItem("username") || "Usuario";
+      const rol = localStorage.getItem("rol") || "";
+      document.getElementById("navUsername").textContent = username;
+      const rolEl = document.getElementById("navRol");
+      rolEl.textContent = rol === "admin" ? "Admin" : "Visualizador";
+      rolEl.className += rol === "admin"
+        ? " ml-1 bg-yellow-500 text-yellow-900 text-xs px-2 py-0.5 rounded-full"
+        : " ml-1 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full";
+
+      // Mostrar tab Administración solo para admin
+      if (rol === "admin") {
+        document.getElementById("tabAdminBtn").classList.remove("hidden");
+      }
+
+      // Restricciones para visualizadores
+      if (rol !== "admin") {
+        // Mostrar banner de solo lectura y ocultar guía de pasos
+        document.getElementById("bannerViewer").classList.remove("hidden");
+        document.getElementById("guiaPasos").classList.add("hidden");
+
+        // Gestión: ocultar formulario de registro de equipos, conservar el listado
+        const formEquipo = document.getElementById("formEquipo");
+        if (formEquipo) {
+          formEquipo.classList.add("hidden");
+          const notice = document.createElement("p");
+          notice.className = "text-xs text-gray-400 italic mb-3";
+          notice.textContent = "Solo los administradores pueden registrar equipos.";
+          formEquipo.parentNode.insertBefore(notice, formEquipo);
+        }
+
+        // Gestión: ocultar tarjeta de inscripción de deportistas
+        document.getElementById("cardInscribirDeportista")?.classList.add("hidden");
+
+        // Competencia: ocultar tarjeta de generar fixture
+        document.getElementById("cardGenerarFixture")?.classList.add("hidden");
+
+      }
+
+      // Logout
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.clear();
+        window.location.href = "/login";
+      });
+
+      // Cancelar registro de resultado
+      document.getElementById("cancelarResultado")?.addEventListener("click", () => {
+        document.getElementById("resultadoCard").classList.add("hidden");
+        document.getElementById("formResultado").reset();
+      });
+
+      // Tabs
+      document.querySelectorAll(".tab-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".tab-btn").forEach((b) => {
+            b.classList.remove("border-blue-600", "text-blue-700", "bg-white");
+            b.classList.add("border-transparent", "text-gray-500");
+          });
+          btn.classList.add("border-blue-600", "text-blue-700", "bg-white");
+          btn.classList.remove("border-transparent", "text-gray-500");
+
+          document.querySelectorAll(".tab-content").forEach((c) => c.classList.add("hidden"));
+          document.getElementById(btn.dataset.tab).classList.remove("hidden");
+        });
+      });
+
+      // Función global para abrir el formulario de resultado desde la tabla
+      window.mostrarFormularioResultado = function (partidoId) {
+        if (localStorage.getItem("rol") !== "admin") return;
+        const card = document.getElementById("resultadoCard");
+        document.getElementById("idPartido").value = partidoId;
+        card.classList.remove("hidden");
+        card.scrollIntoView({ behavior: "smooth", block: "center" });
+      };
+    </script>
+  </body>
+</html>
