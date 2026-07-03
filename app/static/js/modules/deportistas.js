@@ -11,7 +11,7 @@ export async function inscribirDeportista(event) {
   const documento  = document.getElementById("documento").value.trim();
 
   if (!id_equipo) {
-    showMessage("deportistaResultado", "❌ Selecciona un equipo antes de continuar.");
+    showMessage("deportistaResultado", "Selecciona un equipo antes de continuar.");
     return;
   }
 
@@ -26,11 +26,11 @@ export async function inscribirDeportista(event) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Error en inscripción");
 
-    showMessage("deportistaResultado", `✅ ${data.mensaje}`, false);
+    showMessage("deportistaResultado", data.mensaje, false);
     event.target.reset();
     listarDeportistas(id_equipo); // refrescar lista del mismo equipo
   } catch (err) {
-    showMessage("deportistaResultado", `❌ ${err.message}`);
+    showMessage("deportistaResultado", err.message);
   } finally {
     restore();
   }
@@ -75,6 +75,6 @@ export async function listarDeportistas(equipoId) {
         <tbody>${filas}</tbody>
       </table>`;
   } catch (err) {
-    contenedor.innerHTML = `<p class="text-red-500 text-xs mt-2">❌ ${err.message}</p>`;
+    contenedor.innerHTML = `<p class="text-red-500 text-xs mt-2">Error: ${err.message}</p>`;
   }
 }

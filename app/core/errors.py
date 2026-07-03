@@ -1,0 +1,7 @@
+class DomainError(Exception):
+    """Error controlado de dominio con código HTTP asociado."""
+
+    def __init__(self, message, status_code=400):
+        super().__init__(message)
+        self.message = message
+        self.status_code = status_code

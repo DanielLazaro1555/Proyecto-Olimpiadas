@@ -17,7 +17,7 @@ export async function registrarResultado(event) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Error al registrar resultado");
 
-    showMessage("resultadoRegistro", `✅ ${data.mensaje}`, false);
+    showMessage("resultadoRegistro", data.mensaje, false);
     document.getElementById("formResultado").reset();
     document.getElementById("resultadoCard").classList.add("hidden");
 
@@ -29,7 +29,7 @@ export async function registrarResultado(event) {
       );
     }
   } catch (err) {
-    showMessage("resultadoRegistro", `❌ ${err.message}`);
+    showMessage("resultadoRegistro", err.message);
   }
 }
 
@@ -62,7 +62,7 @@ export async function mostrarTabla(event) {
     ];
 
     const filas = tabla.map((row, i) => {
-      const pos    = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}°`;
+      const pos    = `${i + 1}°`;
       const estilo = rowStyles[i] ?? "hover:bg-gray-50 border-l-4 border-transparent";
       const sinJuegos = row.pj === 0;
 
@@ -120,12 +120,12 @@ export async function mostrarTabla(event) {
         </table>
       </div>
       <div class="flex flex-wrap gap-4 mt-3 text-xs text-gray-500">
-        <span>🟢 <b>Victoria</b>: 3 pts</span>
-        <span>🟡 <b>Empate</b>: 1 pt</span>
-        <span>🔴 <b>Derrota</b>: 0 pts</span>
+        <span><b>Victoria</b>: 3 pts</span>
+        <span><b>Empate</b>: 1 pt</span>
+        <span><b>Derrota</b>: 0 pts</span>
         <span class="text-gray-400">Orden: puntos → diferencia de goles → goles a favor</span>
       </div>`;
   } catch (err) {
-    contenedor.innerHTML = `<p class="text-red-600 text-sm mt-2">❌ ${err.message}</p>`;
+    contenedor.innerHTML = `<p class="text-red-600 text-sm mt-2">Error: ${err.message}</p>`;
   }
 }

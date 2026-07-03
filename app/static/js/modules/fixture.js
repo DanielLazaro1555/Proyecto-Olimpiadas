@@ -3,10 +3,14 @@
 import { API_BASE } from "./config.js";
 import { showMessage, btnLoading } from "./ui.js";
 
+function encodeValue(value) {
+  return encodeURIComponent(String(value ?? ""));
+}
+
 export async function generarFixture(event) {
   event.preventDefault();
   const deporte = document.getElementById("deporteFixture").value.trim();
-  if (!deporte) { showMessage("fixtureResultado", "❌ Selecciona un deporte."); return; }
+  if (!deporte) { showMessage("fixtureResultado", "Selecciona un deporte."); return; }
 
   const btn     = event.submitter;
   const restore = btnLoading(btn, "Generando...");
@@ -23,7 +27,7 @@ export async function generarFixture(event) {
       if (res.status === 409) {
         document.getElementById("fixtureResultado").innerHTML = `
           <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm px-4 py-3 rounded-lg">
-            ⚠️ Ya existe un calendario para <strong>${deporte}</strong>.
+            Ya existe un calendario para <strong>${deporte}</strong>.
             <button id="btnRegenerar"
               class="ml-2 bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-semibold px-3 py-1 rounded-lg transition">
               Eliminar y regenerar
@@ -34,10 +38,10 @@ export async function generarFixture(event) {
         );
         return;
       }
-      throw new Error(data.error || "Error generando calendario");
+      throw new Error(data.error || "Error generando el calendario");
     }
 
-    let msg = `✅ ${data.mensaje} — ${data.total_partidos} partidos generados`;
+    let msg = `${data.mensaje} — ${data.total_partidos} partidos generados`;
     if (data.partidos?.length) {
       const lista = data.partidos
         .map(p => `<li class="py-0.5">${p.local} <span class="text-gray-400">vs</span> ${p.visitante} &nbsp;·&nbsp; ${p.fecha} ${p.hora}</li>`)
@@ -46,7 +50,7 @@ export async function generarFixture(event) {
     }
     showMessage("fixtureResultado", msg, false);
   } catch (err) {
-    showMessage("fixtureResultado", `❌ ${err.message}`);
+    showMessage("fixtureResultado", err.message);
   } finally {
     restore();
   }
@@ -69,9 +73,9 @@ async function _eliminarYRegererar(deporte) {
     const data = await gen.json();
     if (!gen.ok) throw new Error(data.error || "Error regenerando");
 
-    showMessage("fixtureResultado", `✅ Calendario regenerado — ${data.total_partidos} partidos`, false);
+    showMessage("fixtureResultado", `Calendario generado nuevamente — ${data.total_partidos} partidos`, false);
   } catch (err) {
-    showMessage("fixtureResultado", `❌ ${err.message}`);
+    showMessage("fixtureResultado", err.message);
   } finally {
     restore();
   }
@@ -87,7 +91,7 @@ export async function consultarFixture(event) {
       `${API_BASE}/fixture/consultar/${encodeURIComponent(deporte)}`,
     );
     const partidos = await res.json();
-    if (!res.ok) throw new Error("Error consultando calendario");
+    if (!res.ok) throw new Error("Error consultando el calendario");
 
     if (partidos.length === 0) {
       contenedor.innerHTML = `<p class="text-gray-500 mt-2">No hay partidos para este deporte. Genera el calendario primero.</p>`;
@@ -104,11 +108,14 @@ export async function consultarFixture(event) {
       const esAdmin = ["admin", "operador"].includes(localStorage.getItem("rol"));
       const accion =
         p.resultado_local !== null
-          ? `<span class="text-green-600 font-medium text-xs">✓ Finalizado</span>`
+          ? `<span class="text-green-600 font-medium text-xs">Registrado</span>`
           : esAdmin
             ? `<button
                  class="bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium px-3 py-1 rounded-lg transition"
-                 onclick="window.mostrarFormularioResultado(${p.id}, '${p.local}', '${p.visitante}')"
+                 data-action="registrar-resultado"
+                 data-id="${p.id}"
+                 data-local="${encodeValue(p.local)}"
+                 data-visitante="${encodeValue(p.visitante)}"
                >Registrar</button>`
             : `<span class="text-gray-400 text-xs italic">Solo lectura</span>`;
 
@@ -142,6 +149,6 @@ export async function consultarFixture(event) {
 
     document.getElementById("resultadoCard").classList.add("hidden");
   } catch (err) {
-    contenedor.innerHTML = `<p class="text-red-600 text-sm mt-2">❌ ${err.message}</p>`;
+    contenedor.innerHTML = `<p class="text-red-600 text-sm mt-2">Error: ${err.message}</p>`;
   }
 }

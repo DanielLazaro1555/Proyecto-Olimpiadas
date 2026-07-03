@@ -3,6 +3,10 @@
 import { API_BASE } from "./config.js";
 import { showMessage } from "./ui.js";
 
+function encodeValue(value) {
+  return encodeURIComponent(String(value ?? ""));
+}
+
 export async function registrarUsuario(event) {
   event.preventDefault();
   const username = document.getElementById("nuevoUsername").value.trim();
@@ -17,11 +21,11 @@ export async function registrarUsuario(event) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Error al registrar");
 
-    showMessage("usuarioResultado", `✅ ${data.mensaje}`, false);
+    showMessage("usuarioResultado", data.mensaje, false);
     document.getElementById("formUsuario").reset();
     listarUsuarios();
   } catch (err) {
-    showMessage("usuarioResultado", `❌ ${err.message}`);
+    showMessage("usuarioResultado", err.message);
   }
 }
 
@@ -44,7 +48,9 @@ export async function listarUsuarios() {
       const btnEliminar = esSoy
         ? `<span class="text-xs text-gray-400 italic">Tu cuenta</span>`
         : `<button
-             onclick="window.eliminarUsuario(${u.id}, '${u.username}')"
+             data-action="eliminar-usuario"
+             data-id="${u.id}"
+             data-username="${encodeValue(u.username)}"
              class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-lg transition"
            >Eliminar</button>`;
 
@@ -72,7 +78,7 @@ export async function listarUsuarios() {
         <tbody>${filas}</tbody>
       </table>`;
   } catch (err) {
-    contenedor.innerHTML = `<p class="text-red-600 text-sm mt-2">❌ ${err.message}</p>`;
+    contenedor.innerHTML = `<p class="text-red-600 text-sm mt-2">Error: ${err.message}</p>`;
   }
 }
 
@@ -84,10 +90,10 @@ export async function eliminarUsuario(id, username) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Error al eliminar");
-    showMessage("usuarioResultado", `✅ ${data.mensaje}`, false);
+    showMessage("usuarioResultado", data.mensaje, false);
     listarUsuarios();
   } catch (err) {
-    showMessage("usuarioResultado", `❌ ${err.message}`);
+    showMessage("usuarioResultado", err.message);
   }
 }
 

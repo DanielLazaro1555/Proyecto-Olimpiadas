@@ -3,12 +3,20 @@
 import os
 import sqlite3
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "olimpiadas.db")
+DEFAULT_DB_PATH = os.path.join(os.path.dirname(__file__), "olimpiadas.db")
+
+
+def get_db_path():
+    return os.environ.get("DATABASE_PATH", DEFAULT_DB_PATH)
 
 
 def get_db():
     """Retorna una conexión a la base de datos."""
-    conn = sqlite3.connect(DB_PATH)
+    db_path = get_db_path()
+    db_dir = os.path.dirname(db_path)
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
+    conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     return conn
@@ -94,15 +102,14 @@ def _seed_usuarios():
 
     with get_db() as conn:
         for username, password, rol in usuarios_default:
-            existe = conn.execute(
-                "SELECT id FROM usuarios WHERE username = ?", (username,)
-            ).fetchone()
-            if not existe:
-                password_hash = bcrypt.hashpw(
-                    password.encode("utf-8"), bcrypt.gensalt()
-                ).decode("utf-8")
-                conn.execute(
-                    "INSERT INTO usuarios (username, password_hash, rol) VALUES (?, ?, ?)",
-                    (username, password_hash, rol),
-                )
+            password_hash = bcrypt.hashpw(
+                password.encode("utf-8"), bcrypt.gensalt()
+            ).decode("utf-8")
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO usuarios (username, password_hash, rol)
+                VALUES (?, ?, ?)
+                """,
+                (username, password_hash, rol),
+            )
         conn.commit()

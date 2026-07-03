@@ -33,6 +33,9 @@ Thumbs.db
 .env
 .env.*
 *.key
+!.env.example
+!app/.env.example
+!app/.env.podman.example
 
 # Logs
 *.log

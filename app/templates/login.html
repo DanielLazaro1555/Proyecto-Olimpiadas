@@ -5,22 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Iniciar sesión — Olimpiadas Perú</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}" />
+    <script type="module" src="{{ url_for('static', filename='js/login.js') }}" defer></script>
   </head>
-  <body class="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-900 flex items-center justify-center p-4">
+  <body class="login-body flex items-center justify-center p-4">
 
     <div class="w-full max-w-md">
 
       <!-- Logo y título -->
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-yellow-400 rounded-full mb-4 shadow-lg">
-          <span class="text-3xl">🏅</span>
+        <div class="login-mark inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 shadow-lg">
+          <span class="text-2xl font-bold text-slate-900">OP</span>
         </div>
         <h1 class="text-3xl font-bold text-white">Olimpiadas Perú</h1>
         <p class="text-blue-200 mt-1">Sistema de Gestión Deportiva</p>
       </div>
 
       <!-- Tarjeta de login -->
-      <div class="bg-white rounded-2xl shadow-2xl p-8">
+      <div class="login-card p-8">
         <h2 class="text-xl font-semibold text-gray-800 mb-6">Iniciar sesión</h2>
 
         <form id="loginForm" class="space-y-4">
@@ -69,7 +71,7 @@
             class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg transition duration-200 flex items-center justify-center gap-2"
           >
             <span id="btnText">Ingresar</span>
-            <span id="btnSpinner" class="hidden animate-spin">⏳</span>
+            <span id="btnSpinner" class="hidden">Cargando...</span>
           </button>
         </form>
 
@@ -97,54 +99,5 @@
         Arquitectura Orientada a Servicios · UTP 2026
       </p>
     </div>
-
-    <script>
-      // Mostrar/ocultar contraseña
-      document.getElementById("togglePassword").addEventListener("click", () => {
-        const input = document.getElementById("password");
-        input.type = input.type === "password" ? "text" : "password";
-      });
-
-      document.getElementById("loginForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const username = document.getElementById("username").value.trim();
-        const password = document.getElementById("password").value;
-        const errorMsg = document.getElementById("errorMsg");
-        const submitBtn = document.getElementById("submitBtn");
-        const btnText = document.getElementById("btnText");
-        const btnSpinner = document.getElementById("btnSpinner");
-
-        errorMsg.classList.add("hidden");
-        submitBtn.disabled = true;
-        btnText.textContent = "Ingresando...";
-        btnSpinner.classList.remove("hidden");
-
-        try {
-          const response = await fetch("/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password }),
-          });
-          const data = await response.json();
-
-          if (response.ok) {
-            localStorage.setItem("token", data.token);
-            localStorage.setItem("rol", data.rol);
-            localStorage.setItem("username", data.username);
-            window.location.href = "/";
-          } else {
-            errorMsg.textContent = data.error || "Credenciales inválidas";
-            errorMsg.classList.remove("hidden");
-          }
-        } catch {
-          errorMsg.textContent = "Error de conexión. Verifica que el servidor esté activo.";
-          errorMsg.classList.remove("hidden");
-        } finally {
-          submitBtn.disabled = false;
-          btnText.textContent = "Ingresar";
-          btnSpinner.classList.add("hidden");
-        }
-      });
-    </script>
   </body>
 </html>

@@ -6,6 +6,7 @@ import { generarFixture, consultarFixture } from "./modules/fixture.js";
 import { registrarResultado, mostrarTabla } from "./modules/partidos.js";
 import { cargarSugerencias } from "./modules/autocomplete.js";
 import { registrarUsuario, listarUsuarios, eliminarUsuario } from "./modules/usuarios.js";
+import { initShell, openResultForm } from "./modules/shell.js";
 
 // authFetch: fetch con token JWT incluido automáticamente
 window.authFetch = async function (url, options = {}) {
@@ -31,14 +32,13 @@ window.authFetch = async function (url, options = {}) {
 };
 
 // Exponer funciones globales (llamadas desde onclick en tablas dinámicas)
-window.eliminarUsuario = eliminarUsuario;
-window.eliminarEquipo  = eliminarEquipo;
-
 document.addEventListener("DOMContentLoaded", () => {
   if (!localStorage.getItem("token")) {
     window.location.href = "/login";
     return;
   }
+
+  initShell();
 
   // Formularios de gestión
   document.getElementById("formEquipo")?.addEventListener("submit", registrarEquipo);
@@ -65,6 +65,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Cargar sugerencias (selects de equipos y deportes)
   cargarSugerencias();
+
+  document.addEventListener("click", async (event) => {
+    const actionEl = event.target.closest("[data-action]");
+    if (!actionEl) {
+      return;
+    }
+
+    const { action } = actionEl.dataset;
+
+    if (action === "eliminar-equipo") {
+      await eliminarEquipo(Number(actionEl.dataset.id), decodeURIComponent(actionEl.dataset.name));
+      return;
+    }
+
+    if (action === "eliminar-usuario") {
+      await eliminarUsuario(Number(actionEl.dataset.id), decodeURIComponent(actionEl.dataset.username));
+      return;
+    }
+
+    if (action === "registrar-resultado") {
+      openResultForm(
+        Number(actionEl.dataset.id),
+        decodeURIComponent(actionEl.dataset.local),
+        decodeURIComponent(actionEl.dataset.visitante),
+      );
+    }
+  });
 
   // Si es admin, cargar lista de usuarios al iniciar
   if (localStorage.getItem("rol") === "admin") {

@@ -1,0 +1,21 @@
+services:
+  olimpiadas-app:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: localhost/proyecto-olimpiadas:latest
+    container_name: proyecto-olimpiadas-app
+    ports:
+      - "5000:5000"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-u22326979}
+      FLASK_ENV: ${FLASK_ENV:-production}
+      FLASK_DEBUG: ${FLASK_DEBUG:-false}
+      DATABASE_PATH: /data/olimpiadas.db
+      PORT: 5000
+    volumes:
+      - olimpiadas_data:/data:Z
+    restart: unless-stopped
+
+volumes:
+  olimpiadas_data:

@@ -1,20 +1,20 @@
 # auth.py
+# La autenticación HTTP se mantiene aquí como adaptador Flask.
+# La lógica de negocio usa bcrypt en core/services/auth_service.py
+# y la SECRET_KEY se resuelve desde os.environ en core/security.py.
 
-import datetime
-import os
-import re
-import sqlite3
 from functools import wraps
 
-import bcrypt
 import jwt
 from flask import Blueprint, jsonify, request
 
 import database as db
+from core.errors import DomainError
+from core.repositories.auth_repository import AuthRepository
+from core.security import decode_token
+from core.services.auth_service import AuthService
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
-
-SECRET_KEY = os.environ.get("SECRET_KEY", "cambia_esta_clave_en_produccion")
 
 
 # ─── Decoradores ──────────────────────────────────────────────────────────────
@@ -28,7 +28,7 @@ def token_required(f):
         if not token:
             return jsonify({"error": "Token requerido"}), 401
         try:
-            current_user = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            current_user = decode_token(token)
         except jwt.ExpiredSignatureError:
             return jsonify({"error": "Sesión expirada, inicia sesión nuevamente"}), 401
         except jwt.InvalidTokenError:
@@ -47,7 +47,7 @@ def role_required(allowed_roles):
             if not token:
                 return jsonify({"error": "Token requerido"}), 401
             try:
-                data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+                data = decode_token(token)
                 if data["rol"] not in allowed_roles:
                     return jsonify({"error": "Permisos insuficientes"}), 403
             except Exception:
@@ -57,11 +57,24 @@ def role_required(allowed_roles):
     return decorator
 
 
+def roles_required(*allowed_roles):
+    """Inyecta el usuario actual y valida roles permitidos en una sola capa."""
+    def decorator(f):
+        @token_required
+        @wraps(f)
+        def decorated(current_user, *args, **kwargs):
+            if current_user["rol"] not in allowed_roles:
+                return jsonify({"error": "Se requiere rol operador o administrador"}), 403
+            return f(current_user, *args, **kwargs)
+        return decorated
+    return decorator
+
+
 # ─── Rutas públicas ───────────────────────────────────────────────────────────
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
-    data = request.get_json()
+    data = request.get_json() or {}
     username = data.get("username", "").strip()
     password = data.get("password", "")
 
@@ -69,27 +82,12 @@ def login():
         return jsonify({"error": "Usuario y contraseña requeridos"}), 400
 
     with db.get_db() as conn:
-        user = conn.execute(
-            "SELECT * FROM usuarios WHERE username = ?", (username,)
-        ).fetchone()
-
-    if not user or not bcrypt.checkpw(
-        password.encode("utf-8"), user["password_hash"].encode("utf-8")
-    ):
-        return jsonify({"error": "Credenciales inválidas"}), 401
-
-    token = jwt.encode(
-        {
-            "user_id": user["id"],
-            "username": user["username"],
-            "rol": user["rol"],
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=24),
-        },
-        SECRET_KEY,
-        algorithm="HS256",
-    )
-
-    return jsonify({"token": token, "rol": user["rol"], "username": user["username"]}), 200
+        service = AuthService(AuthRepository(conn))
+        try:
+            payload = service.login(username, password)
+            return jsonify(payload), 200
+        except DomainError as error:
+            return jsonify({"error": error.message}), error.status_code
 
 
 # ─── Rutas protegidas (solo admin) ────────────────────────────────────────────
@@ -98,66 +96,41 @@ def login():
 @token_required
 def registrar(current_user):
     """Crea un nuevo usuario. Solo admins pueden registrar cuentas."""
-    if current_user["rol"] != "admin":
-        return jsonify({"error": "Solo los administradores pueden registrar usuarios"}), 403
-
-    data = request.get_json()
+    data = request.get_json() or {}
     username = data.get("username", "").strip()
     password = data.get("password", "")
     rol = data.get("rol", "visualizador")
 
-    if not username or not password:
-        return jsonify({"error": "Usuario y contraseña requeridos"}), 400
-    if not re.match(r'^[a-zA-Z0-9_]{3,30}$', username):
-        return jsonify({"error": "Usuario: 3-30 caracteres, solo letras, números y guión bajo"}), 400
-    if len(password) < 6:
-        return jsonify({"error": "La contraseña debe tener al menos 6 caracteres"}), 400
-    if rol not in ("admin", "operador", "visualizador"):
-        return jsonify({"error": "Rol inválido"}), 400
-
-    password_hash = bcrypt.hashpw(
-        password.encode("utf-8"), bcrypt.gensalt()
-    ).decode("utf-8")
-
-    try:
-        with db.get_db() as conn:
-            conn.execute(
-                "INSERT INTO usuarios (username, password_hash, rol) VALUES (?, ?, ?)",
-                (username, password_hash, rol),
-            )
-            conn.commit()
-        return jsonify({"mensaje": f"Usuario '{username}' registrado exitosamente"}), 201
-    except sqlite3.IntegrityError:
-        return jsonify({"error": "El nombre de usuario ya existe"}), 409
+    with db.get_db() as conn:
+        service = AuthService(AuthRepository(conn))
+        try:
+            payload = service.register_user(current_user, username, password, rol)
+            return jsonify(payload), 201
+        except DomainError as error:
+            return jsonify({"error": error.message}), error.status_code
 
 
 @auth_bp.route("/usuarios", methods=["GET"])
 @token_required
 def listar_usuarios(current_user):
     """Lista todos los usuarios. Solo admins."""
-    if current_user["rol"] != "admin":
-        return jsonify({"error": "Permisos insuficientes"}), 403
     with db.get_db() as conn:
-        usuarios = conn.execute(
-            "SELECT id, username, rol FROM usuarios ORDER BY id"
-        ).fetchall()
-    return jsonify([dict(u) for u in usuarios]), 200
+        service = AuthService(AuthRepository(conn))
+        try:
+            payload = service.list_users(current_user)
+            return jsonify(payload), 200
+        except DomainError as error:
+            return jsonify({"error": error.message}), error.status_code
 
 
 @auth_bp.route("/usuarios/<int:usuario_id>", methods=["DELETE"])
 @token_required
 def eliminar_usuario(current_user, usuario_id):
     """Elimina un usuario. Solo admins. No puede eliminarse a sí mismo."""
-    if current_user["rol"] != "admin":
-        return jsonify({"error": "Permisos insuficientes"}), 403
-    if current_user["user_id"] == usuario_id:
-        return jsonify({"error": "No puedes eliminar tu propia cuenta"}), 409
     with db.get_db() as conn:
-        existe = conn.execute(
-            "SELECT id FROM usuarios WHERE id = ?", (usuario_id,)
-        ).fetchone()
-        if not existe:
-            return jsonify({"error": "Usuario no encontrado"}), 404
-        conn.execute("DELETE FROM usuarios WHERE id = ?", (usuario_id,))
-        conn.commit()
-    return jsonify({"mensaje": "Usuario eliminado correctamente"}), 200
+        service = AuthService(AuthRepository(conn))
+        try:
+            payload = service.delete_user(current_user, usuario_id)
+            return jsonify(payload), 200
+        except DomainError as error:
+            return jsonify({"error": error.message}), error.status_code

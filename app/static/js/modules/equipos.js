@@ -4,14 +4,18 @@ import { API_BASE } from "./config.js";
 import { showMessage, btnLoading } from "./ui.js";
 import { cargarSugerencias } from "./autocomplete.js";
 
+function encodeValue(value) {
+  return encodeURIComponent(String(value ?? ""));
+}
+
 export async function registrarEquipo(event) {
   event.preventDefault();
   const region       = document.getElementById("region").value.trim();
   const deporte      = document.getElementById("deporteEquipo").value.trim();
   const nombre_equipo = document.getElementById("nombreEquipo").value.trim();
 
-  if (!region)  { showMessage("equipoResultado", "❌ Selecciona una región."); return; }
-  if (!deporte) { showMessage("equipoResultado", "❌ Selecciona un deporte."); return; }
+  if (!region)  { showMessage("equipoResultado", "Selecciona una región."); return; }
+  if (!deporte) { showMessage("equipoResultado", "Selecciona un deporte."); return; }
 
   const btn     = event.submitter;
   const restore = btnLoading(btn, "Registrando...");
@@ -24,12 +28,12 @@ export async function registrarEquipo(event) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Error al registrar");
 
-    showMessage("equipoResultado", `✅ ${data.mensaje}`, false);
+    showMessage("equipoResultado", data.mensaje, false);
     event.target.reset();
     cargarSugerencias();
     listarEquipos(); // actualizar lista automáticamente
   } catch (err) {
-    showMessage("equipoResultado", `❌ ${err.message}`);
+    showMessage("equipoResultado", err.message);
   } finally {
     restore();
   }
@@ -66,7 +70,10 @@ export async function listarEquipos() {
           <td class="px-3 py-2 text-gray-600">${eq.region}</td>
           <td class="px-3 py-2 text-center">
             ${puedeEliminar
-              ? `<button onclick="window.eliminarEquipo(${eq.id}, '${eq.nombre_equipo}')"
+              ? `<button
+                   data-action="eliminar-equipo"
+                   data-id="${eq.id}"
+                   data-name="${encodeValue(eq.nombre_equipo)}"
                    class="bg-red-100 hover:bg-red-500 text-red-600 hover:text-white text-xs px-3 py-1 rounded-lg transition">
                    Eliminar
                  </button>`
@@ -92,7 +99,7 @@ export async function listarEquipos() {
 
     contenedor.innerHTML = tablas;
   } catch (err) {
-    contenedor.innerHTML = `<p class="text-red-600 text-sm mt-2">❌ ${err.message}</p>`;
+    contenedor.innerHTML = `<p class="text-red-600 text-sm mt-2">Error: ${err.message}</p>`;
   }
 }
 
@@ -102,10 +109,10 @@ export async function eliminarEquipo(id, nombre) {
     const res  = await window.authFetch(`${API_BASE}/equipos/${id}`, { method: "DELETE" });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Error al eliminar");
-    showMessage("equipoResultado", `✅ ${data.mensaje}`, false);
+    showMessage("equipoResultado", data.mensaje, false);
     listarEquipos();
     cargarSugerencias();
   } catch (err) {
-    showMessage("equipoResultado", `❌ ${err.message}`);
+    showMessage("equipoResultado", err.message);
   }
 }
