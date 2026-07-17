@@ -1,0 +1,47 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Sistema Olimpiadas Perú - SOA API",
+    "description": "Especificación OpenAPI 3.0 para la gestión del sistema de eventos deportivos Olimpiadas Perú. Incluye servicios de autenticación, equipos, deportistas, fixture, partidos, reportes, notificaciones y catálogo de servicios. La especificación está modularizada: cada servicio vive en su propio archivo bajo openapi/services/ y este archivo solo referencia sus paths (ver $ref).",
+    "version": "1.1.0"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:5000",
+      "description": "Servidor Local Flask"
+    }
+  ],
+  "paths": {
+    "/auth/login": { "$ref": "openapi/services/auth.json#/paths/~1auth~1login" },
+    "/auth/registro": { "$ref": "openapi/services/auth.json#/paths/~1auth~1registro" },
+    "/auth/usuarios": { "$ref": "openapi/services/auth.json#/paths/~1auth~1usuarios" },
+    "/auth/usuarios/{usuario_id}": { "$ref": "openapi/services/auth.json#/paths/~1auth~1usuarios~1{usuario_id}" },
+    "/auth/auditoria": { "$ref": "openapi/services/auth.json#/paths/~1auth~1auditoria" },
+    "/equipos/": { "$ref": "openapi/services/equipos.json#/paths/~1equipos~1" },
+    "/equipos/{equipo_id}": { "$ref": "openapi/services/equipos.json#/paths/~1equipos~1{equipo_id}" },
+    "/deportistas/inscribir": { "$ref": "openapi/services/deportistas.json#/paths/~1deportistas~1inscribir" },
+    "/deportistas/equipo/{equipo_id}": { "$ref": "openapi/services/deportistas.json#/paths/~1deportistas~1equipo~1{equipo_id}" },
+    "/fixture/generar/{deporte}": { "$ref": "openapi/services/fixture.json#/paths/~1fixture~1generar~1{deporte}" },
+    "/fixture/consultar/{deporte}": { "$ref": "openapi/services/fixture.json#/paths/~1fixture~1consultar~1{deporte}" },
+    "/fixture/eliminar/{deporte}": { "$ref": "openapi/services/fixture.json#/paths/~1fixture~1eliminar~1{deporte}" },
+    "/partidos/resultado": { "$ref": "openapi/services/partidos.json#/paths/~1partidos~1resultado" },
+    "/partidos/tabla/{deporte}": { "$ref": "openapi/services/partidos.json#/paths/~1partidos~1tabla~1{deporte}" },
+    "/reportes/tabla/{deporte}": { "$ref": "openapi/services/reportes.json#/paths/~1reportes~1tabla~1{deporte}" },
+    "/reportes/goleadores/{deporte}": { "$ref": "openapi/services/reportes.json#/paths/~1reportes~1goleadores~1{deporte}" },
+    "/reportes/estadisticas/{deporte}": { "$ref": "openapi/services/reportes.json#/paths/~1reportes~1estadisticas~1{deporte}" },
+    "/notificaciones/": { "$ref": "openapi/services/notificaciones.json#/paths/~1notificaciones~1" },
+    "/catalog/": { "$ref": "openapi/services/catalog.json#/paths/~1catalog~1" }
+  },
+  "components": {
+    "schemas": {
+      "TablaPosicionesItem": { "$ref": "openapi/schemas.json#/TablaPosicionesItem" }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

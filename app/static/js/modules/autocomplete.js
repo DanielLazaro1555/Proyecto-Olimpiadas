@@ -23,6 +23,7 @@ export async function cargarSugerencias() {
   _initDeporteSelect("deporteFixture",   deportes);
   _initDeporteSelect("deporteConsultar", deportes);
   _initDeporteSelect("deporteTabla",     deportes);
+  _initDeporteSelect("deporteReportes",  deportes);
 
   // ── 5. Select de equipos (formulario de deportistas) ─────────────────────
   try {

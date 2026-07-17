@@ -1,0 +1,26 @@
+{
+  "paths": {
+    "/catalog/": {
+      "get": {
+        "summary": "Catálogo de Servicios UDDI",
+        "description": "Obtiene la lista estructurada de todos los servicios registrados en el sistema, con sus descripciones y contratos.",
+        "responses": {
+          "200": {
+            "description": "Catálogo de servicios",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "online" },
+                    "servicios": { "type": "array", "items": { "type": "object" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

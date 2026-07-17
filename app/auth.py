@@ -13,6 +13,7 @@ from core.errors import DomainError
 from core.repositories.auth_repository import AuthRepository
 from core.security import decode_token
 from core.services.auth_service import AuthService
+from servicios.notify import notificar_evento as _notificar_evento
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -105,9 +106,15 @@ def registrar(current_user):
         service = AuthService(AuthRepository(conn))
         try:
             payload = service.register_user(current_user, username, password, rol)
-            return jsonify(payload), 201
         except DomainError as error:
             return jsonify({"error": error.message}), error.status_code
+
+        _notificar_evento(
+            conn, "usuario_registrado",
+            "Nuevo usuario creado",
+            f"Se creó el usuario '{username}' con rol '{rol}'.",
+        )
+        return jsonify(payload), 201
 
 
 @auth_bp.route("/usuarios", methods=["GET"])
@@ -131,6 +138,21 @@ def eliminar_usuario(current_user, usuario_id):
         service = AuthService(AuthRepository(conn))
         try:
             payload = service.delete_user(current_user, usuario_id)
+            return jsonify(payload), 200
+        except DomainError as error:
+            return jsonify({"error": error.message}), error.status_code
+
+
+@auth_bp.route("/auditoria", methods=["GET"])
+@token_required
+def listar_auditoria(current_user):
+    """Lista el historial de auditoría. Solo admins."""
+    with db.get_db() as conn:
+        from core.repositories.audit_repository import AuditRepository
+        from core.services.audit_service import AuditService
+        service = AuditService(AuditRepository(conn))
+        try:
+            payload = service.list_audits(current_user)
             return jsonify(payload), 200
         except DomainError as error:
             return jsonify({"error": error.message}), error.status_code

@@ -1,0 +1,41 @@
+[
+  {
+    "escenario": "A - Lecturas públicas",
+    "total": 400,
+    "exitosas": 400,
+    "errores": 0,
+    "tiempo_total_s": 0.316,
+    "throughput_req_s": 1267.72,
+    "latencia_media_ms": 14.9,
+    "latencia_p50_ms": 13.6,
+    "latencia_p95_ms": 22.2,
+    "latencia_p99_ms": 31.3,
+    "latencia_max_ms": 84.4
+  },
+  {
+    "escenario": "B - Login concurrente (bcrypt)",
+    "total": 200,
+    "exitosas": 200,
+    "errores": 0,
+    "tiempo_total_s": 4.603,
+    "throughput_req_s": 43.45,
+    "latencia_media_ms": 448.9,
+    "latencia_p50_ms": 438.0,
+    "latencia_p95_ms": 682.4,
+    "latencia_p99_ms": 916.7,
+    "latencia_max_ms": 1044.3
+  },
+  {
+    "escenario": "C - Escrituras concurrentes (SQLite)",
+    "total": 100,
+    "exitosas": 100,
+    "errores": 0,
+    "tiempo_total_s": 0.439,
+    "throughput_req_s": 227.69,
+    "latencia_media_ms": 48.1,
+    "latencia_p50_ms": 21.0,
+    "latencia_p95_ms": 185.5,
+    "latencia_p99_ms": 337.2,
+    "latencia_max_ms": 435.7
+  }
+]

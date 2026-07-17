@@ -3,16 +3,28 @@
 import { API_BASE } from "./config.js";
 import { showMessage } from "./ui.js";
 
+function leerGoleadores(containerId) {
+  return Array.from(document.querySelectorAll(`#${containerId} .goleador-input`))
+    .map((input) => ({ deportista_id: parseInt(input.dataset.id), goles: parseInt(input.value) || 0 }))
+    .filter((g) => g.goles > 0);
+}
+
 export async function registrarResultado(event) {
   event.preventDefault();
   const id_partido = parseInt(document.getElementById("idPartido").value);
   const goles_local = parseInt(document.getElementById("golesLocal").value);
   const goles_visitante = parseInt(document.getElementById("golesVisitante").value);
+  const goleadores_local = leerGoleadores("goleadoresLocal");
+  const goleadores_visitante = leerGoleadores("goleadoresVisitante");
+
+  const body = { id_partido, goles_local, goles_visitante };
+  if (goleadores_local.length) body.goleadores_local = goleadores_local;
+  if (goleadores_visitante.length) body.goleadores_visitante = goleadores_visitante;
 
   try {
     const res = await window.authFetch(`${API_BASE}/partidos/resultado`, {
       method: "POST",
-      body: JSON.stringify({ id_partido, goles_local, goles_visitante }),
+      body: JSON.stringify(body),
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Error al registrar resultado");
@@ -20,6 +32,8 @@ export async function registrarResultado(event) {
     showMessage("resultadoRegistro", data.mensaje, false);
     document.getElementById("formResultado").reset();
     document.getElementById("resultadoCard").classList.add("hidden");
+    document.getElementById("goleadoresLocal").innerHTML = "";
+    document.getElementById("goleadoresVisitante").innerHTML = "";
 
     // Refrescar la tabla de partidos si hay deporte consultado
     const deporteConsultar = document.getElementById("deporteConsultar")?.value;

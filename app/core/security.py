@@ -1,10 +1,33 @@
 import datetime
 import os
+import secrets
 
 import jwt
 
 
-RAW_SECRET_KEY = os.environ.get("SECRET_KEY", "u22326979")
+def _resolve_raw_secret_key():
+    """Resuelve la clave de firma JWT desde el entorno.
+
+    No hay un valor por defecto hardcodeado: un secreto fijo y conocido en el
+    código fuente permitiría forjar tokens (incluido rol=admin) contra
+    cualquier despliegue que olvide definir SECRET_KEY. Si la variable no
+    está configurada, se genera una clave aleatoria por proceso — esto
+    invalida las sesiones existentes al reiniciar, lo cual es preferible a
+    un secreto predecible.
+    """
+    raw = os.environ.get("SECRET_KEY")
+    if not raw:
+        print(
+            "AVISO: SECRET_KEY no está configurada en el entorno. Se generó una "
+            "clave aleatoria solo para esta ejecución (los tokens emitidos no "
+            "sobrevivirán a un reinicio). Define SECRET_KEY en producción — ver "
+            "app/.env.example."
+        )
+        raw = secrets.token_hex(32)
+    return raw
+
+
+RAW_SECRET_KEY = _resolve_raw_secret_key()
 
 
 def get_secret_key():

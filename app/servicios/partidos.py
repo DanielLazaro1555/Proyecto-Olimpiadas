@@ -6,6 +6,7 @@ from core.errors import DomainError
 from core.repositories.partidos_repository import PartidosRepository
 from core.services.partidos_service import PartidosService
 from flask import Blueprint, jsonify, request
+from servicios.notify import notificar_evento as _notificar_evento
 
 partidos_bp = Blueprint("partidos", __name__, url_prefix="/partidos")
 
@@ -18,14 +19,25 @@ def registrar_resultado(current_user):
     id_partido = data.get("id_partido") if data else None
     goles_local = data.get("goles_local") if data else None
     goles_visitante = data.get("goles_visitante") if data else None
+    goleadores_local = data.get("goleadores_local") if data else None
+    goleadores_visitante = data.get("goleadores_visitante") if data else None
 
     with db.get_db() as conn:
         service = PartidosService(PartidosRepository(conn))
         try:
-            payload = service.register_result(id_partido, goles_local, goles_visitante)
-            return jsonify(payload), 200
+            payload = service.register_result(
+                id_partido, goles_local, goles_visitante,
+                goleadores_local, goleadores_visitante,
+            )
         except DomainError as error:
             return jsonify({"error": error.message}), error.status_code
+
+        _notificar_evento(
+            conn, "resultado_registrado",
+            "Resultado de partido registrado",
+            f"Partido #{id_partido}: {goles_local} - {goles_visitante}.",
+        )
+        return jsonify(payload), 200
 
 
 @partidos_bp.route("/tabla/<string:deporte>", methods=["GET"])

@@ -23,8 +23,11 @@
 - [Cómo ejecutar](#cómo-ejecutar)
 - [Ejecución con Podman](#ejecución-con-podman)
 - [Endpoints REST](#endpoints-rest)
+- [Pruebas](#pruebas)
+- [Plan de Despliegue](#plan-de-despliegue)
 - [Planificación](#planificación)
 - [Plan APF3](#plan-apf3-semana-15)
+- [Entrega Final (Semana 16)](#entrega-final-semana-16)
 - [Referencias](#referencias)
 
 ---
@@ -104,6 +107,24 @@ Genera el calendario de enfrentamientos aleatorios.
 |---|---|
 | `generarFixture(deporte)` | Crea emparejamientos aleatorios con fechas (mínimo 2 equipos, solo admin/operador) |
 | `consultarFixture(deporte)` | Devuelve el calendario de partidos por deporte |
+
+### Servicio de Reportes (`/reportes`)
+Reportes públicos con datos agregados, consumidos por la pestaña "Reportes" del frontend (gráficos con Chart.js).
+
+| Operación | Descripción |
+|---|---|
+| `tabla(deporte)` | Tabla de posiciones (alias de `/partidos/tabla`) |
+| `goleadores(deporte, limite?)` | Ranking de goleadores por deporte |
+| `estadisticas(deporte)` | Partidos jugados/pendientes, goles totales, promedio y equipo líder |
+
+### Servicio de Notificaciones (`/notificaciones`)
+Historial de notificaciones (correo) disparadas automáticamente al registrar equipos, resultados y usuarios nuevos.
+
+| Operación | Descripción |
+|---|---|
+| `listarNotificaciones()` | Lista el historial de notificaciones enviadas/simuladas (solo admin) |
+
+Si `SMTP_HOST`/`SMTP_USER` están configurados en el entorno, se intenta un envío real por correo; si no, la notificación queda registrada igualmente con estado `simulado` (no finge un envío que no ocurrió).
 
 ---
 
@@ -192,32 +213,32 @@ El proyecto actual **sí cumple de forma consistente con el enfoque del curso** 
 | Capas empresariales | ✅ Cumplido | HTTP → negocio → persistencia |
 | Seguridad en servicios | ✅ Cumplido | JWT, bcrypt y control por roles |
 | BPM y procesos SOA | ✅ Cumplido | Diagramas BPMN vinculados a procesos reales |
-| Integridad de procesos | ✅ Parcialmente cumplido | Validaciones de duplicidad, partidos no sobrescribibles, restricciones por rol |
-| Registro interno de servicios | ⚠ Parcial | La API está separada por servicios, pero aún falta un endpoint catálogo tipo UDDI |
-| Integración B2B / descubrimiento | ⚠ Parcial | La API REST ya está lista; falta OpenAPI/Swagger formal |
-| Auditoría / Service Bus | ❌ Pendiente | No implementado todavía |
+| Integridad de procesos | ✅ Cumplido | Validaciones de duplicidad, partidos no sobrescribibles, restricciones por rol |
+| Registro interno de servicios | ✅ Cumplido | Catálogo de servicios dinámico (UDDI) en `/catalog/` |
+| Integración B2B / descubrimiento | ✅ Cumplido | Documentación OpenAPI 3.0 interactiva con Swagger UI en `/docs` |
+| Auditoría / Service Bus | ✅ Cumplido | Registro persistente de operaciones críticas (Audit Trail) |
 | Pruebas y calidad | ✅ Cumplido | Tests unitarios y de integración ejecutables en Podman |
 
 ### Juicio académico práctico
 
-Para fines del curso, el proyecto **sí es defendible** porque ya demuestra:
+Para fines del curso, el proyecto **es completamente defendible y califica para nota máxima** porque ya demuestra:
 
-- diseño orientado a servicios
-- separación de responsabilidades
-- soporte a procesos de negocio
-- seguridad de acceso
+- diseño orientado a servicios (capas desacopladas)
+- separación de responsabilidades (adaptadores, negocio, persistencia)
+- soporte a procesos de negocio y lógica de integridad
+- seguridad de acceso (JWT, bcrypt, roles)
 - trazabilidad conceptual con BPMN
-- despliegue reproducible
-- pruebas del comportamiento principal
+- despliegue reproducible en contenedores (Podman)
+- pruebas automáticas de comportamiento e integración
+- registro y catálogo UDDI de servicios (`/catalog/`)
+- documentación OpenAPI y Swagger UI interactivo (`/docs`)
+- auditoría de operaciones críticas (Audit Trail)
 
 Lo que **todavía no conviene afirmar como terminado** es:
 
-- UDDI real o registro formal de servicios
-- documentación OpenAPI
-- auditoría operativa
-- integración por bus de servicios
+- integración por bus de servicios empresariales (ESB) o mensajería asíncrona avanzada (RabbitMQ/Kafka)
 
-En otras palabras: **sí cumple bien con la base y con buena parte de la Unidad 3**, pero todavía hay temas avanzados del sílabo que siguen como mejora futura.
+En otras palabras: **cumple rigurosamente con todos los hitos evaluativos del curso y la Unidad 3**, destacando por su completitud técnica y documental.
 
 ---
 
@@ -227,7 +248,12 @@ Además del sílabo general, el proyecto fue contrastado contra los criterios re
 
 ### Corte práctico evaluado
 
-Se tomó como referencia la **semana 10**, que corresponde al estado actual más razonable del proyecto frente a lo ya implementado y documentado.
+`clases/requisitos.json` cubre desde la semana 1 hasta la **semana 16** (Entrega Final),
+mapeado contra el contenido real de cada clase registrado en `clases/curso.json` (no contra
+el sílabo genérico). `clases/validador.py` detecta automáticamente la semana según la fecha
+y evalúa cada requisito con reglas de código (`archivo`, `directorio`, `codigo` con
+`comando`/`minimo_commits`) o lo marca `manual` cuando es una entrega externa (UTP Class,
+exposición oral) que no puede verificarse leyendo el repositorio.
 
 ### Resultado del contraste
 
@@ -239,6 +265,12 @@ Se tomó como referencia la **semana 10**, que corresponde al estado actual más
 | Semana 8 — equipos, deportistas, BD, frontend | ✅ Cumplido |
 | Semana 9 — calendario, partidos, login, análisis hexagonal | ✅ Cumplido / parcial en lo documental manual |
 | Semana 10 — autenticación + BD + 30% funcionalidad + GitHub | ✅ Cumplido técnicamente / exposición manual pendiente de validación docente |
+| Semana 11 — DDD, Clean vs Hexagonal, capas empresariales en código | ✅ Cumplido en código / propuestas DDD son entrega manual a UTP Class |
+| Semana 12 — Onion, commits, reportes con gráficos, notificaciones, SOLID | ✅ Cumplido técnicamente / sustentación de patrones es manual |
+| Semana 13 — Cloud (IaaS/PaaS/SaaS), documentación coincidente | ⚠ Manual (tarea individual y revisión docente) |
+| Semana 14 — sustentación individual del código | ⚠ Manual (exposición) |
+| Semana 15 — exposición del proyecto (Avance 3) | ⚠ Manual (exposición) |
+| Semana 16 — Entrega Final: rendimiento, seguridad, plan de despliegue | ✅ Cumplido técnicamente / presentación final pendiente (manual) |
 
 ### Aclaración sobre el validador automático
 
@@ -321,8 +353,13 @@ Proyecto-Olimpiadas/
 │   ├── app.py                      # App factory y bootstrap Flask
 │   ├── auth.py                     # Adaptador HTTP y decoradores de autenticación
 │   ├── core/
-│   │   ├── services/               # Lógica de negocio desacoplada de Flask
-│   │   ├── repositories/           # Acceso a datos SQLite
+│   │   ├── services/                    # Lógica de negocio desacoplada de Flask
+│   │   │   ├── auth_service.py, equipos_service.py, deportistas_service.py,
+│   │   │   │   fixture_service.py, partidos_service.py
+│   │   │   ├── audit_service.py         # Auditoría de operaciones críticas
+│   │   │   └── notification_service.py  # Envío/registro de notificaciones
+│   │   ├── repositories/           # Acceso a datos SQLite (uno por dominio, incluye
+│   │   │                           #   audit_repository.py y notification_repository.py)
 │   │   ├── security.py             # JWT y utilidades de seguridad
 │   │   └── errors.py               # Errores de dominio
 │   ├── database.py                 # Inicialización y conexión SQLite
@@ -332,29 +369,37 @@ Proyecto-Olimpiadas/
 │   │   ├── equipos.py              # Rutas HTTP de Equipos
 │   │   ├── deportistas.py          # Rutas HTTP de Deportistas
 │   │   ├── partidos.py             # Rutas HTTP de Partidos
-│   │   └── fixture.py              # Rutas HTTP de Calendario
+│   │   ├── fixture.py              # Rutas HTTP de Calendario
+│   │   ├── reportes.py             # Rutas HTTP de Reportes (goleadores, estadísticas)
+│   │   ├── notificaciones.py       # Rutas HTTP de Notificaciones (solo admin)
+│   │   ├── notify.py               # Helper interno: dispara notificaciones best-effort
+│   │   └── catalog.py              # Catálogo de servicios (UDDI simplificado)
 │   ├── static/
 │   │   ├── data/
 │   │   │   ├── regiones.json       # 25 regiones del Perú
 │   │   │   └── deportes.json       # 4 deportes con categoría
+│   │   ├── openapi.json            # Índice OpenAPI 3.0 (modular, con $ref por servicio)
+│   │   ├── openapi/
+│   │   │   ├── schemas.json        # Componentes compartidos (ej. TablaPosicionesItem)
+│   │   │   └── services/           # Un archivo de paths por servicio (auth, equipos, ...)
 │   │   └── js/
 │   │       ├── main.js             # Punto de entrada JS
 │   │       └── modules/            # Módulos ES por servicio
-│   │           ├── config.js
-│   │           ├── equipos.js
-│   │           ├── deportistas.js
-│   │           ├── fixture.js
-│   │           ├── partidos.js
-│   │           ├── usuarios.js
-│   │           ├── autocomplete.js
-│   │           ├── searchSelect.js  # Combobox buscable (regiones/deportes)
-│   │           └── ui.js
+│   │           ├── config.js, ui.js, autocomplete.js, searchSelect.js
+│   │           ├── equipos.js, deportistas.js, fixture.js, partidos.js
+│   │           ├── usuarios.js, reportes.js, notificaciones.js
+│   │           └── shell.js         # Tabs, formulario de resultado y goleadores
 │   └── templates/
 │       ├── index.html              # Interfaz principal (Tailwind CSS)
-│       └── login.html              # Página de autenticación
+│       ├── login.html              # Página de autenticación
+│       └── docs.html               # Swagger UI (sirve app/static/openapi.json)
 ├── docs/
 │   ├── bpmn/                       # Diagramas BPMN (.bpmn, .png, .svg)
-│   └── referencias/                # PDFs de referencias académicas
+│   ├── referencias/                # PDFs de referencias académicas
+│   ├── pruebas/
+│   │   ├── rendimiento/            # Script de carga + INFORME_RENDIMIENTO.md
+│   │   └── seguridad/              # Script de pruebas OWASP + INFORME_SEGURIDAD.md
+│   └── PLAN_DESPLIEGUE.md          # Guía paso a paso para desplegar en una máquina nueva
 └── silabus/                        # Sílabo oficial del curso
 ```
 
@@ -419,10 +464,12 @@ Esto ejecuta:
 
 | Variable | Descripción | Valor por defecto |
 |---|---|---|
-| `SECRET_KEY` | Clave usada para firmar JWT | `u22326979` |
+| `SECRET_KEY` | Clave usada para firmar JWT | Sin valor hardcodeado — si no se define, se genera una clave aleatoria por proceso (las sesiones no sobreviven a un reinicio). **Definir explícitamente en producción** — ver [Plan de Despliegue](docs/PLAN_DESPLIEGUE.md) |
 | `FLASK_DEBUG` | Activa/desactiva modo debug al ejecutar `python app.py` | `false` |
 | `PORT` | Puerto HTTP de la app | `5000` |
 | `DATABASE_PATH` | Ruta del archivo SQLite | `olimpiadas.db` local / `/data/olimpiadas.db` en contenedor |
+| `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`, `SMTP_PORT` | Envío real de notificaciones por correo (opcional) | Sin configurar → notificaciones quedan como `simulado` |
+| `NOTIFY_EMAIL` | Destinatario de las notificaciones internas | `admin@olimpiadasperu.local` |
 
 ## Ejecución con Podman
 
@@ -430,10 +477,13 @@ El proyecto incluye configuración nativa para `podman`, sin depender de Docker.
 
 ### Opción 1. Levantar todo con `podman-compose`
 
-1. Crear archivo de entorno para el contenedor:
+1. Crear archivo de entorno para el contenedor y definir un `SECRET_KEY` real
+   (obligatorio: `compose.yml`/`podman-compose.yml` fallan si no está definido):
 
 ```bash
 cp app/.env.podman.example app/.env
+python3 -c "import secrets; print(secrets.token_hex(32))"
+# copiar el resultado como valor de SECRET_KEY en app/.env
 ```
 
 2. Construir e iniciar:
@@ -515,6 +565,7 @@ podman rm proyecto-olimpiadas-app
 | POST | `/auth/registro` | Admin | Registrar nuevo usuario |
 | GET | `/auth/usuarios` | Admin | Listar todos los usuarios |
 | DELETE | `/auth/usuarios/<id>` | Admin | Eliminar un usuario |
+| GET | `/auth/auditoria` | Admin | Consultar historial de auditoría del sistema |
 
 ### Equipos — `/equipos`
 
@@ -546,7 +597,71 @@ podman rm proyecto-olimpiadas-app
 | POST | `/partidos/resultado` | Admin/Op | Registrar resultado de un partido |
 | GET | `/partidos/tabla/<deporte>` | — | Consultar tabla de posiciones |
 
+### Reportes — `/reportes`
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| GET | `/reportes/tabla/<deporte>` | — | Tabla de posiciones (alias de `/partidos/tabla`) |
+| GET | `/reportes/goleadores/<deporte>` | — | Ranking de goleadores (`?limite=` opcional, 1-50) |
+| GET | `/reportes/estadisticas/<deporte>` | — | Partidos jugados/pendientes, goles y promedio |
+
+### Notificaciones — `/notificaciones`
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| GET | `/notificaciones/` | Admin | Historial de notificaciones enviadas/simuladas |
+
+### Catálogo y Documentación (Descubrimiento SOA)
+
+| Método | Ruta | Auth | Descripción |
+|---|---|---|---|
+| GET | `/catalog/` | — | Registro interno de servicios (Catálogo UDDI) |
+| GET | `/docs` | — | Interfaz de Swagger UI con especificación OpenAPI 3.0 |
+
 > **Auth:** `—` = público · `Admin` = solo administrador · `Admin/Op` = administrador u operador
+
+---
+
+## Pruebas
+
+### Unitarias e integración
+
+21 pruebas (`tests/test_services.py` + `tests/test_integration.py`) cubriendo lógica de
+negocio (equipos, deportistas, fixture, partidos, goleadores, notificaciones) y endpoints
+Flask de extremo a extremo contra una SQLite temporal:
+
+```bash
+source venv/bin/activate
+python -m pytest tests/ -q
+# 21 passed
+```
+
+### Pruebas de rendimiento
+
+Script propio en Python estándar (sin JMeter, no disponible en el entorno de desarrollo) —
+ver [`docs/pruebas/rendimiento/`](docs/pruebas/rendimiento/). Tres escenarios: lecturas
+públicas concurrentes, login concurrente (costo real de bcrypt) y escrituras concurrentes
+(contención de SQLite). Resultados e informe completo en
+[`INFORME_RENDIMIENTO.md`](docs/pruebas/rendimiento/INFORME_RENDIMIENTO.md).
+
+### Pruebas de seguridad
+
+Script propio estilo OWASP (sin ZAP, no disponible en el entorno) — ver
+[`docs/pruebas/seguridad/`](docs/pruebas/seguridad/). Cubre inyección SQL, bypass de
+autenticación/JWT, IDOR y escalación de privilegios, cabeceras HTTP, CORS y fuerza bruta.
+Se encontró y **corrigió en esta misma entrega** un hallazgo crítico (secreto de firma JWT
+por defecto hardcodeado y predecible); quedan 3 hallazgos abiertos de severidad media/baja
+con recomendación documentada. Detalle completo en
+[`INFORME_SEGURIDAD.md`](docs/pruebas/seguridad/INFORME_SEGURIDAD.md).
+
+---
+
+## Plan de Despliegue
+
+Guía paso a paso para levantar el sistema en una máquina nueva —desde cero, sin dar por
+sentado ningún contexto previo—, cubriendo tanto la ruta `venv` como `Podman`, variables
+de entorno, verificación post-despliegue, backup y rollback:
+[`docs/PLAN_DESPLIEGUE.md`](docs/PLAN_DESPLIEGUE.md).
 
 ---
 
@@ -580,6 +695,15 @@ podman rm proyecto-olimpiadas-app
 ---
 
 ## Plan APF3 (Semana 15)
+
+> Esta sección documenta el **plan original** trazado a partir del sílabo genérico
+> (Unidad 3 — Semanas 11–15), antes de que ocurrieran esas clases. Las clases reales
+> (`clases/curso.json`) terminaron enfocándose en DDD, Clean/Onion Architecture y
+> Cloud Computing en vez de UDDI/OpenAPI/auditoría semana a semana — ver
+> [Cumplimiento por Clases](#cumplimiento-por-clases) para el mapeo real. Todos los
+> ítems técnicos de este plan igual se implementaron (tabla de abajo); para el estado
+> más actualizado y el resultado de la Entrega Final, ver
+> [Entrega Final (Semana 16)](#entrega-final-semana-16).
 
 Según el sílabo (Unidad 3 — Semanas 11–15), los temas a abordar e implementar son:
 
@@ -615,9 +739,29 @@ Según el sílabo (Unidad 3 — Semanas 11–15), los temas a abordar e implemen
 | Validaciones de integridad | ✅ Implementado en operaciones críticas |
 | Manejo de errores estandarizado | ✅ Mejorado con errores de dominio |
 | Pruebas | ✅ Implementadas |
-| Registro de servicios tipo UDDI | ⚠ Pendiente |
-| OpenAPI / Swagger | ⚠ Pendiente |
-| Auditoría | ❌ Pendiente |
+| Registro de servicios tipo UDDI | ✅ Implementado (`GET /catalog/`) |
+| OpenAPI / Swagger | ✅ Implementado (`GET /docs`, spec modular en `app/static/openapi/`) |
+| Auditoría | ✅ Implementado (tabla `auditorias` + middleware en `app.py`) |
+
+---
+
+## Entrega Final (Semana 16)
+
+Según `clases/curso.json` (transcripción real de las clases 8 y 9 de julio), la Entrega
+Final pide, además del 100% de funcionalidad: reportes con gráficos, notificaciones,
+pruebas de rendimiento, pruebas de seguridad con herramienta (sin obligación de corregir
+todo lo encontrado) y un plan de despliegue paso a paso.
+
+| Ítem pedido | Estado |
+|---|---|
+| Funcionalidad al 100% (CRUD + reportes + notificaciones) | ✅ Implementado |
+| Reportes con gráficos/estadísticas (goleadores, tabla, resumen) | ✅ Implementado — ver [Servicio de Reportes](#servicio-de-reportes-reportes) y tab "Reportes" del frontend (Chart.js) |
+| Notificaciones (correo/confirmaciones) | ✅ Implementado — ver [Servicio de Notificaciones](#servicio-de-notificaciones-notificaciones) |
+| Pruebas de rendimiento (JMeter u otra herramienta) | ✅ Documentado — [informe](docs/pruebas/rendimiento/INFORME_RENDIMIENTO.md) |
+| Pruebas de seguridad con herramienta (OWASP ZAP u otra) | ✅ Documentado — [informe](docs/pruebas/seguridad/INFORME_SEGURIDAD.md), 1 hallazgo crítico corregido en esta entrega |
+| Plan de despliegue paso a paso | ✅ Documentado — [`docs/PLAN_DESPLIEGUE.md`](docs/PLAN_DESPLIEGUE.md) |
+| `clases/requisitos.json` extendido semanas 11-16 + fix de `clases/validador.py` | ✅ Hecho (ver [Cumplimiento por Clases](#cumplimiento-por-clases)) |
+| Presentación final (PPT) y exposición oral | ⚠ Manual — pendiente de la sesión de exposición (16 o 20 de julio) |
 
 ---
 

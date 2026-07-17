@@ -1,3 +1,5 @@
+import { API_BASE } from "./config.js";
+
 function applyRoleBadge(rolEl, rol) {
   const rolLabel = {
     admin: "Admin",
@@ -56,7 +58,44 @@ function applyViewerRestrictions(rol) {
   document.getElementById("cardGenerarFixture")?.classList.add("hidden");
 }
 
-export function openResultForm(partidoId, local, visitante) {
+function renderGoleadorInputs(containerId, deportistas) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (!deportistas.length) {
+    container.innerHTML = `<p class="text-xs text-gray-400 italic">Este equipo no tiene deportistas inscritos.</p>`;
+    return;
+  }
+
+  container.innerHTML = deportistas.map((d) => `
+    <label class="flex items-center justify-between gap-2">
+      <span class="text-gray-700">${d.nombre} ${d.apellido}</span>
+      <input type="number" min="0" placeholder="0"
+        class="goleador-input w-16 border border-gray-300 rounded-lg px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-yellow-400"
+        data-id="${d.id}" />
+    </label>`).join("");
+}
+
+async function cargarGoleadorInputs(equipoId, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (!equipoId) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = `<p class="text-xs text-gray-400 italic">Cargando roster...</p>`;
+  try {
+    const res = await window.authFetch(`${API_BASE}/deportistas/equipo/${equipoId}`);
+    const deportistas = await res.json();
+    if (!res.ok) throw new Error("No se pudo cargar el roster");
+    renderGoleadorInputs(containerId, deportistas);
+  } catch {
+    container.innerHTML = `<p class="text-xs text-red-500">No se pudo cargar el roster del equipo.</p>`;
+  }
+}
+
+export function openResultForm(partidoId, local, visitante, localId, visitanteId) {
   if (!["admin", "operador"].includes(localStorage.getItem("rol"))) {
     return;
   }
@@ -66,6 +105,9 @@ export function openResultForm(partidoId, local, visitante) {
   document.getElementById("formResultado").reset();
   document.getElementById("golesLocal").placeholder = `Goles ${local}`;
   document.getElementById("golesVisitante").placeholder = `Goles ${visitante}`;
+
+  cargarGoleadorInputs(localId, "goleadoresLocal");
+  cargarGoleadorInputs(visitanteId, "goleadoresVisitante");
 
   const card = document.getElementById("resultadoCard");
   card.classList.remove("hidden");
@@ -81,6 +123,7 @@ export function initShell() {
 
   if (rol === "admin") {
     document.getElementById("tabAdminBtn")?.classList.remove("hidden");
+    document.getElementById("tabNotificacionesBtn")?.classList.remove("hidden");
   }
 
   applyViewerRestrictions(rol);
@@ -95,5 +138,7 @@ export function initShell() {
     document.getElementById("resultadoCard").classList.add("hidden");
     document.getElementById("formResultado").reset();
     document.getElementById("partidoEquipos").textContent = "— vs —";
+    document.getElementById("goleadoresLocal").innerHTML = "";
+    document.getElementById("goleadoresVisitante").innerHTML = "";
   });
 }

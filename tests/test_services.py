@@ -114,14 +114,19 @@ class FakeFixtureRepository:
 
 
 class FakePartidosRepository:
-    def __init__(self, match=None, teams=None, home=None, away=None):
+    def __init__(self, match=None, teams=None, home=None, away=None, rosters=None):
         self.match = match
         self.teams = teams or []
         self.home = home or {}
         self.away = away or {}
+        self.rosters = rosters or {}
         self.saved = None
+        self.saved_scorers = None
 
     def get_match(self, match_id):
+        return self.match
+
+    def get_match_with_teams(self, match_id):
         return self.match
 
     def save_match_result(self, match_id, local_goals, visitor_goals):
@@ -135,6 +140,18 @@ class FakePartidosRepository:
 
     def list_finished_away_matches(self, sport, team_id):
         return self.away.get(team_id, [])
+
+    def is_athlete_in_team(self, athlete_id, team_id):
+        return athlete_id in self.rosters.get(team_id, [])
+
+    def save_goal_scorers(self, match_id, scorer_rows):
+        self.saved_scorers = scorer_rows
+
+    def get_top_scorers(self, sport, limit):
+        return []
+
+    def get_match_counts(self, sport):
+        return {"total": 0, "jugados": 0, "pendientes": 0, "total_goles": 0}
 
 
 class ServicesTestCase(unittest.TestCase):
@@ -190,6 +207,76 @@ class ServicesTestCase(unittest.TestCase):
             service.register_result(1, 2, 1)
 
         self.assertEqual(error.exception.status_code, 409)
+
+    def test_register_result_with_valid_scorers_saves_goals(self):
+        repo = FakePartidosRepository(
+            match={
+                "id": 1, "deporte": "Futbol",
+                "equipo_local_id": 10, "equipo_visitante_id": 20,
+                "resultado_local": None, "resultado_visitante": None,
+            },
+            rosters={10: [101, 102], 20: [201]},
+        )
+        service = PartidosService(repo)
+
+        service.register_result(
+            1, 2, 1,
+            goleadores_local=[{"deportista_id": 101, "goles": 2}],
+            goleadores_visitante=[{"deportista_id": 201, "goles": 1}],
+        )
+
+        self.assertEqual(repo.saved, (1, 2, 1))
+        self.assertEqual(len(repo.saved_scorers), 2)
+
+    def test_register_result_rejects_scorer_not_in_team(self):
+        repo = FakePartidosRepository(
+            match={
+                "id": 1, "deporte": "Futbol",
+                "equipo_local_id": 10, "equipo_visitante_id": 20,
+                "resultado_local": None, "resultado_visitante": None,
+            },
+            rosters={10: [101], 20: [201]},
+        )
+        service = PartidosService(repo)
+
+        with self.assertRaises(DomainError) as error:
+            service.register_result(
+                1, 1, 0,
+                goleadores_local=[{"deportista_id": 999, "goles": 1}],
+            )
+
+        self.assertEqual(error.exception.status_code, 400)
+
+    def test_register_result_rejects_goal_sum_mismatch(self):
+        repo = FakePartidosRepository(
+            match={
+                "id": 1, "deporte": "Futbol",
+                "equipo_local_id": 10, "equipo_visitante_id": 20,
+                "resultado_local": None, "resultado_visitante": None,
+            },
+            rosters={10: [101], 20: [201]},
+        )
+        service = PartidosService(repo)
+
+        with self.assertRaises(DomainError) as error:
+            service.register_result(
+                1, 3, 0,
+                goleadores_local=[{"deportista_id": 101, "goles": 1}],
+            )
+
+        self.assertEqual(error.exception.status_code, 400)
+
+    def test_get_statistics_computes_average_goals(self):
+        repo = FakePartidosRepository()
+        repo.get_match_counts = lambda sport: {
+            "total": 4, "jugados": 2, "pendientes": 2, "total_goles": 5
+        }
+        service = PartidosService(repo)
+
+        stats = service.get_statistics("Futbol")
+
+        self.assertEqual(stats["partidos_jugados"], 2)
+        self.assertEqual(stats["promedio_goles_por_partido"], 2.5)
 
     def test_build_standings_sorts_by_points(self):
         repo = FakePartidosRepository(

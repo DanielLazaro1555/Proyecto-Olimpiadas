@@ -1,0 +1,102 @@
+{
+  "paths": {
+    "/equipos/": {
+      "get": {
+        "summary": "Listar todos los equipos",
+        "description": "Devuelve la lista completa de equipos registrados en el sistema.",
+        "responses": {
+          "200": {
+            "description": "Lista de equipos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer", "example": 1 },
+                      "region": { "type": "string", "example": "Lima" },
+                      "deporte": { "type": "string", "example": "Futbol" },
+                      "nombre_equipo": { "type": "string", "example": "Los Halcones" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Registrar un equipo",
+        "description": "Registra un equipo asociando una región única para el deporte. Requiere token de administrador u operador.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["region", "deporte", "nombre_equipo"],
+                "properties": {
+                  "region": { "type": "string", "example": "Arequipa" },
+                  "deporte": { "type": "string", "example": "Futbol" },
+                  "nombre_equipo": { "type": "string", "example": "Melgar F.C." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Equipo registrado con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensaje": { "type": "string", "example": "Equipo registrado exitosamente" },
+                    "id": { "type": "integer", "example": 2 }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Faltan campos requeridos" },
+          "409": { "description": "Ya existe un equipo de esa región en este deporte" }
+        }
+      }
+    },
+    "/equipos/{equipo_id}": {
+      "delete": {
+        "summary": "Eliminar un equipo",
+        "description": "Elimina un equipo si no tiene partidos asignados en el fixture. Requiere token de administrador u operador.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "equipo_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Equipo eliminado con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensaje": { "type": "string", "example": "Equipo 2 eliminado correctamente" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Equipo no encontrado" },
+          "409": { "description": "No se puede eliminar un equipo con partidos asignados en el fixture" }
+        }
+      }
+    }
+  }
+}

@@ -106,3 +106,68 @@ function _miId() {
     return null;
   }
 }
+
+export async function listarAuditoria() {
+  const contenedor = document.getElementById("listaAuditorias");
+  if (!contenedor) return;
+  try {
+    const res = await window.authFetch(`${API_BASE}/auth/auditoria`);
+    const auditorias = await res.json();
+    if (!res.ok) throw new Error(auditorias.error || "Error obteniendo auditoría");
+
+    if (auditorias.length === 0) {
+      contenedor.innerHTML = `<p class="text-gray-500 text-sm mt-2">No hay registros de auditoría aún.</p>`;
+      return;
+    }
+
+    const filas = auditorias.map((a) => {
+      const badgeMetodo = a.metodo === "DELETE"
+        ? "bg-red-100 text-red-800"
+        : "bg-blue-100 text-blue-800";
+      
+      const badgeStatus = a.status_code >= 200 && a.status_code < 300
+        ? "bg-green-100 text-green-800"
+        : "bg-orange-100 text-orange-800";
+
+      let payloadTruncated = a.payload || "";
+      if (payloadTruncated.length > 50) {
+        payloadTruncated = `<span title="${encodeValue(payloadTruncated)}">${payloadTruncated.slice(0, 47)}...</span>`;
+      }
+
+      return `
+        <tr class="border-b border-gray-100 hover:bg-gray-50 text-xs">
+          <td class="px-2 py-1.5 text-gray-400">${a.id}</td>
+          <td class="px-2 py-1.5 whitespace-nowrap text-gray-600">${a.fecha_hora}</td>
+          <td class="px-2 py-1.5 font-medium">${a.username}</td>
+          <td class="px-2 py-1.5 text-gray-500">${a.rol}</td>
+          <td class="px-2 py-1.5">
+            <span class="font-bold px-1.5 py-0.5 rounded text-[10px] uppercase ${badgeMetodo}">${a.metodo}</span>
+          </td>
+          <td class="px-2 py-1.5 font-mono text-gray-700">${a.ruta}</td>
+          <td class="px-2 py-1.5 max-w-[200px] truncate text-gray-500 font-mono text-[11px]">${payloadTruncated}</td>
+          <td class="px-2 py-1.5 text-center">
+            <span class="font-semibold px-2 py-0.5 rounded-full ${badgeStatus}">${a.status_code}</span>
+          </td>
+        </tr>`;
+    }).join("");
+
+    contenedor.innerHTML = `
+      <table class="w-full text-sm border border-gray-100 rounded-lg overflow-hidden mt-2">
+        <thead class="bg-gray-50 text-gray-500 text-xs uppercase">
+          <tr>
+            <th class="px-2 py-1.5 text-left">ID</th>
+            <th class="px-2 py-1.5 text-left">Fecha/Hora</th>
+            <th class="px-2 py-1.5 text-left">Usuario</th>
+            <th class="px-2 py-1.5 text-left">Rol</th>
+            <th class="px-2 py-1.5 text-left">Método</th>
+            <th class="px-2 py-1.5 text-left">Ruta</th>
+            <th class="px-2 py-1.5 text-left">Payload</th>
+            <th class="px-2 py-1.5 text-center">Estado</th>
+          </tr>
+        </thead>
+        <tbody>${filas}</tbody>
+      </table>`;
+  } catch (err) {
+    contenedor.innerHTML = `<p class="text-red-600 text-sm mt-2">Error: ${err.message}</p>`;
+  }
+}

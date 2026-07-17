@@ -116,6 +116,8 @@ export async function consultarFixture(event) {
                  data-id="${p.id}"
                  data-local="${encodeValue(p.local)}"
                  data-visitante="${encodeValue(p.visitante)}"
+                 data-local-id="${p.equipo_local_id}"
+                 data-visitante-id="${p.equipo_visitante_id}"
                >Registrar</button>`
             : `<span class="text-gray-400 text-xs italic">Solo lectura</span>`;
 

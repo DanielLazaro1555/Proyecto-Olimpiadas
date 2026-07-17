@@ -1,0 +1,109 @@
+{
+  "paths": {
+    "/reportes/tabla/{deporte}": {
+      "get": {
+        "summary": "Reporte: tabla de posiciones",
+        "description": "Alias de /partidos/tabla expuesto como reporte. Devuelve la tabla de clasificación por deporte.",
+        "parameters": [
+          {
+            "name": "deporte",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "Futbol" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tabla de clasificación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "../schemas.json#/TablaPosicionesItem" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reportes/goleadores/{deporte}": {
+      "get": {
+        "summary": "Reporte: ranking de goleadores",
+        "description": "Devuelve el ranking de goleadores de un deporte, ordenado por goles descendente.",
+        "parameters": [
+          {
+            "name": "deporte",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "Futbol" }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "description": "Cantidad máxima de goleadores a devolver (1-50, por defecto 10).",
+            "schema": { "type": "integer", "default": 10, "minimum": 1, "maximum": 50 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ranking de goleadores",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "deportista_id": { "type": "integer", "example": 5 },
+                      "nombre": { "type": "string", "example": "Juan" },
+                      "apellido": { "type": "string", "example": "Pérez" },
+                      "equipo_nombre": { "type": "string", "example": "Los Halcones" },
+                      "goles": { "type": "integer", "example": 4 }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reportes/estadisticas/{deporte}": {
+      "get": {
+        "summary": "Reporte: estadísticas generales",
+        "description": "Devuelve estadísticas agregadas de un deporte: partidos jugados/pendientes, total de goles, promedio de goles por partido y equipo líder.",
+        "parameters": [
+          {
+            "name": "deporte",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "Futbol" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estadísticas del deporte",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "deporte": { "type": "string", "example": "Futbol" },
+                    "partidos_totales": { "type": "integer", "example": 6 },
+                    "partidos_jugados": { "type": "integer", "example": 4 },
+                    "partidos_pendientes": { "type": "integer", "example": 2 },
+                    "total_goles": { "type": "integer", "example": 12 },
+                    "promedio_goles_por_partido": { "type": "number", "example": 3.0 },
+                    "equipo_lider": { "type": ["string", "null"], "example": "Los Halcones" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

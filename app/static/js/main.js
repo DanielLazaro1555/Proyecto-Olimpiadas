@@ -5,7 +5,9 @@ import { inscribirDeportista, listarDeportistas } from "./modules/deportistas.js
 import { generarFixture, consultarFixture } from "./modules/fixture.js";
 import { registrarResultado, mostrarTabla } from "./modules/partidos.js";
 import { cargarSugerencias } from "./modules/autocomplete.js";
-import { registrarUsuario, listarUsuarios, eliminarUsuario } from "./modules/usuarios.js";
+import { registrarUsuario, listarUsuarios, eliminarUsuario, listarAuditoria } from "./modules/usuarios.js";
+import { consultarReportes } from "./modules/reportes.js";
+import { listarNotificaciones } from "./modules/notificaciones.js";
 import { initShell, openResultForm } from "./modules/shell.js";
 
 // authFetch: fetch con token JWT incluido automáticamente
@@ -59,9 +61,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Tabla de clasificación
   document.getElementById("formTabla")?.addEventListener("submit", mostrarTabla);
 
+  // Reportes (goleadores y estadísticas con gráficos)
+  document.getElementById("formReportes")?.addEventListener("submit", consultarReportes);
+
   // Administración (solo admin)
   document.getElementById("formUsuario")?.addEventListener("submit", registrarUsuario);
   document.getElementById("btnRefrescarUsuarios")?.addEventListener("click", listarUsuarios);
+  document.getElementById("btnRefrescarAuditoria")?.addEventListener("click", listarAuditoria);
+  document.getElementById("btnRefrescarNotificaciones")?.addEventListener("click", listarNotificaciones);
 
   // Cargar sugerencias (selects de equipos y deportes)
   cargarSugerencias();
@@ -89,12 +96,16 @@ document.addEventListener("DOMContentLoaded", () => {
         Number(actionEl.dataset.id),
         decodeURIComponent(actionEl.dataset.local),
         decodeURIComponent(actionEl.dataset.visitante),
+        Number(actionEl.dataset.localId),
+        Number(actionEl.dataset.visitanteId),
       );
     }
   });
 
-  // Si es admin, cargar lista de usuarios al iniciar
+  // Si es admin, cargar lista de usuarios, auditoría y notificaciones al iniciar
   if (localStorage.getItem("rol") === "admin") {
     listarUsuarios();
+    listarAuditoria();
+    listarNotificaciones();
   }
 });

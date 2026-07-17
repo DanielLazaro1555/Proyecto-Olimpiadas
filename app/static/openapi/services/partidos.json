@@ -1,0 +1,95 @@
+{
+  "paths": {
+    "/partidos/resultado": {
+      "post": {
+        "summary": "Registrar resultado",
+        "description": "Registra el marcador de goles/puntos para un partido. El resultado es permanente y no sobrescribible. Opcionalmente registra el detalle de goleadores por equipo. Requiere token de administrador u operador.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id_partido", "goles_local", "goles_visitante"],
+                "properties": {
+                  "id_partido": { "type": "integer", "example": 1 },
+                  "goles_local": { "type": "integer", "example": 2 },
+                  "goles_visitante": { "type": "integer", "example": 1 },
+                  "goleadores_local": {
+                    "type": "array",
+                    "description": "Opcional. Detalle de goleadores del equipo local; la suma debe coincidir con goles_local.",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "deportista_id": { "type": "integer", "example": 5 },
+                        "goles": { "type": "integer", "example": 2 }
+                      }
+                    }
+                  },
+                  "goleadores_visitante": {
+                    "type": "array",
+                    "description": "Opcional. Detalle de goleadores del equipo visitante; la suma debe coincidir con goles_visitante.",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "deportista_id": { "type": "integer", "example": 8 },
+                        "goles": { "type": "integer", "example": 1 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resultado registrado y tabla de posiciones actualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensaje": { "type": "string", "example": "Resultado registrado exitosamente" },
+                    "id_partido": { "type": "integer", "example": 1 }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Datos de goles inválidos, o goleador que no pertenece al equipo, o suma de goles de goleadores distinta al marcador" },
+          "404": { "description": "El partido no existe" },
+          "409": { "description": "Este partido ya tiene un resultado registrado" }
+        }
+      }
+    },
+    "/partidos/tabla/{deporte}": {
+      "get": {
+        "summary": "Consultar tabla de posiciones",
+        "description": "Calcula de forma dinámica la tabla de clasificación por deporte, ordenada por puntos, diferencia de goles y goles a favor.",
+        "parameters": [
+          {
+            "name": "deporte",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "Futbol" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tabla de clasificación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "../schemas.json#/TablaPosicionesItem" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

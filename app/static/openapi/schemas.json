@@ -1,0 +1,17 @@
+{
+  "TablaPosicionesItem": {
+    "type": "object",
+    "properties": {
+      "equipo_id": { "type": "integer", "example": 1 },
+      "equipo_nombre": { "type": "string", "example": "Los Halcones" },
+      "pj": { "type": "integer", "description": "Partidos jugados", "example": 1 },
+      "pg": { "type": "integer", "description": "Partidos ganados", "example": 1 },
+      "pe": { "type": "integer", "description": "Partidos empatados", "example": 0 },
+      "pp": { "type": "integer", "description": "Partidos perdidos", "example": 0 },
+      "gf": { "type": "integer", "description": "Goles a favor", "example": 2 },
+      "gc": { "type": "integer", "description": "Goles en contra", "example": 1 },
+      "dg": { "type": "integer", "description": "Diferencia de goles (gf - gc)", "example": 1 },
+      "puntos": { "type": "integer", "example": 3 }
+    }
+  }
+}

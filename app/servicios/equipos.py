@@ -6,6 +6,7 @@ from core.errors import DomainError
 from core.repositories.equipos_repository import EquiposRepository
 from core.services.equipos_service import EquiposService
 from flask import Blueprint, jsonify, request
+from servicios.notify import notificar_evento as _notificar_evento
 
 equipos_bp = Blueprint("equipos", __name__, url_prefix="/equipos")
 
@@ -23,9 +24,15 @@ def registrar_equipo(current_user):
         service = EquiposService(EquiposRepository(conn))
         try:
             payload = service.create_team(region, deporte, nombre_equipo)
-            return jsonify(payload), 201
         except DomainError as error:
             return jsonify({"error": error.message}), error.status_code
+
+        _notificar_evento(
+            conn, "equipo_registrado",
+            "Nuevo equipo registrado",
+            f"Se registró el equipo '{nombre_equipo}' ({deporte} - {region}).",
+        )
+        return jsonify(payload), 201
 
 
 @equipos_bp.route("/", methods=["GET"])

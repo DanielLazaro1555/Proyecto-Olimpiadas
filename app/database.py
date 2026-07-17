@@ -81,6 +81,43 @@ def init_db():
             )
         """)
 
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS auditorias (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fecha_hora TEXT DEFAULT (datetime('now', 'localtime')),
+                username TEXT,
+                rol TEXT,
+                metodo TEXT NOT NULL,
+                ruta TEXT NOT NULL,
+                payload TEXT,
+                status_code INTEGER NOT NULL
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS goles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                partido_id INTEGER NOT NULL,
+                deportista_id INTEGER NOT NULL,
+                cantidad INTEGER NOT NULL,
+                FOREIGN KEY (partido_id) REFERENCES partidos(id) ON DELETE CASCADE,
+                FOREIGN KEY (deportista_id) REFERENCES deportistas(id) ON DELETE CASCADE
+            )
+        """)
+
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS notificaciones (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                fecha_hora TEXT DEFAULT (datetime('now', 'localtime')),
+                tipo TEXT NOT NULL,
+                canal TEXT NOT NULL,
+                destinatario TEXT,
+                asunto TEXT,
+                mensaje TEXT,
+                estado TEXT NOT NULL DEFAULT 'simulado'
+            )
+        """)
+
         conn.commit()
 
     _seed_usuarios()

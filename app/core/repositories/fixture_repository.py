@@ -67,6 +67,7 @@ class FixtureRepository:
         self.cursor.execute(
             """
             SELECT p.id, p.fecha, p.hora,
+                   p.equipo_local_id, p.equipo_visitante_id,
                    eq_local.nombre_equipo as local,
                    eq_visit.nombre_equipo as visitante,
                    p.resultado_local, p.resultado_visitante

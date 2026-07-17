@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Olimpiadas Perú</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}" />
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}" defer></script>
   </head>
@@ -21,6 +22,8 @@
           </div>
         </div>
         <div class="flex items-center gap-3">
+          <a href="/docs" target="_blank" class="text-xs bg-blue-800 hover:bg-blue-700 text-white font-medium px-3 py-1.5 rounded-lg transition">Documentación (OpenAPI)</a>
+          <a href="/catalog" target="_blank" class="text-xs bg-indigo-800 hover:bg-indigo-700 text-white font-medium px-3 py-1.5 rounded-lg transition">Catálogo UDDI</a>
           <span class="text-sm text-blue-200 hidden sm:block">
             Bienvenido, <strong id="navUsername" class="text-white"></strong>
             <span id="navRol" class="ml-1 bg-blue-700 text-xs px-2 py-0.5 rounded-full"></span>
@@ -48,8 +51,8 @@
           <div class="grid grid-cols-2 gap-3 text-sm">
             <div class="metric-chip rounded-2xl p-4">
               <p class="text-slate-200">Servicios</p>
-              <p class="mt-2 text-2xl font-bold">5</p>
-              <p class="text-xs text-slate-300">Acceso, equipos, deportistas, calendario y partidos</p>
+              <p class="mt-2 text-2xl font-bold">7</p>
+              <p class="text-xs text-slate-300">Acceso, equipos, deportistas, calendario, partidos, reportes y notificaciones</p>
             </div>
             <div class="metric-chip rounded-2xl p-4">
               <p class="text-slate-200">Acceso</p>
@@ -93,9 +96,16 @@
         <button class="tab-btn px-5 py-2.5 font-semibold text-sm rounded-full" data-tab="clasificacion" aria-selected="false">
           Clasificación
         </button>
+        <button class="tab-btn px-5 py-2.5 font-semibold text-sm rounded-full" data-tab="reportes" aria-selected="false">
+          Reportes
+        </button>
         <!-- Tab Administración: solo visible para admin -->
         <button id="tabAdminBtn" class="tab-btn hidden px-5 py-2.5 font-semibold text-sm rounded-full" data-tab="administracion" aria-selected="false">
           Administración
+        </button>
+        <!-- Tab Notificaciones: solo visible para admin -->
+        <button id="tabNotificacionesBtn" class="tab-btn hidden px-5 py-2.5 font-semibold text-sm rounded-full" data-tab="notificaciones" aria-selected="false">
+          Notificaciones
         </button>
       </div>
 
@@ -309,6 +319,19 @@
               Guardar resultado
             </button>
           </form>
+
+          <!-- Goleadores (opcional): se rellena dinámicamente con el roster de cada equipo -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Goleadores — equipo local</p>
+              <div id="goleadoresLocal" class="space-y-1 text-sm"></div>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase mb-1">Goleadores — equipo visitante</p>
+              <div id="goleadoresVisitante" class="space-y-1 text-sm"></div>
+            </div>
+          </div>
+
           <div id="resultadoRegistro" class="mt-3 text-sm"></div>
         </div>
       </div>
@@ -330,6 +353,42 @@
             </button>
           </form>
           <div id="tablaPosiciones" class="overflow-x-auto text-sm"></div>
+        </div>
+      </div>
+
+      <!-- TAB: Reportes -->
+      <div id="reportes" class="tab-content hidden">
+        <div class="surface-card p-6 mb-6">
+          <h2 class="section-title text-lg font-bold text-gray-800 mb-4">
+            Reportes y estadísticas
+          </h2>
+          <form id="formReportes" class="flex gap-2 mb-4">
+            <input
+              id="deporteReportes"
+              type="hidden"
+              class="flex-1 max-w-xs border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400 bg-white"
+            />
+            <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-semibold px-5 py-2 rounded-lg text-sm transition">
+              Consultar
+            </button>
+          </form>
+          <div id="reportesEstadisticas" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="surface-card p-6">
+            <h3 class="section-title text-base font-bold text-gray-800 mb-3">Goleadores</h3>
+            <p id="reportesGoleadoresVacio" class="text-sm text-gray-500"></p>
+            <div class="relative" style="height: 320px;">
+              <canvas id="chartGoleadores"></canvas>
+            </div>
+          </div>
+          <div class="surface-card p-6">
+            <h3 class="section-title text-base font-bold text-gray-800 mb-3">Partidos jugados vs. pendientes</h3>
+            <div class="relative" style="height: 320px;">
+              <canvas id="chartPartidos"></canvas>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -404,6 +463,50 @@
             </div>
           </div>
 
+          <!-- Auditoría del Sistema (Audit Trail) -->
+          <div class="surface-card p-6 lg:col-span-2 mt-6">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h2 class="section-title text-lg font-bold text-gray-800">
+                  Auditoría del Sistema (Audit Trail)
+                </h2>
+                <p class="text-xs text-gray-500">Trazabilidad operativa de transacciones críticas (POST y DELETE) en la base de datos.</p>
+              </div>
+              <button
+                id="btnRefrescarAuditoria"
+                class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-semibold px-4 py-2 rounded-lg transition"
+              >
+                Refrescar Auditoría
+              </button>
+            </div>
+            <div id="listaAuditorias" class="overflow-x-auto text-sm max-h-96 overflow-y-auto">
+              <p class="text-gray-400 text-sm">Haz clic en Refrescar Auditoría para cargar los logs.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TAB: Notificaciones (solo admin) -->
+      <div id="notificaciones" class="tab-content hidden">
+        <div class="surface-card p-6">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h2 class="section-title text-lg font-bold text-gray-800">
+                Historial de notificaciones
+              </h2>
+              <p class="text-xs text-gray-500">Notificaciones (correo) disparadas por eventos del sistema: equipos registrados, resultados y usuarios nuevos.</p>
+            </div>
+            <button
+              id="btnRefrescarNotificaciones"
+              class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-semibold px-4 py-2 rounded-lg transition"
+            >
+              Refrescar
+            </button>
+          </div>
+          <div id="listaNotificaciones" class="overflow-x-auto text-sm max-h-96 overflow-y-auto">
+            <p class="text-gray-400 text-sm">Haz clic en Refrescar para cargar las notificaciones.</p>
+          </div>
         </div>
       </div>
 

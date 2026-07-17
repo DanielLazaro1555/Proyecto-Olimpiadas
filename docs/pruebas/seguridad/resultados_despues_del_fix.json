@@ -1,0 +1,26 @@
+[
+  {
+    "titulo": "Faltan cabeceras de seguridad HTTP",
+    "severidad": "MEDIA",
+    "descripcion": "La API no envía cabeceras que mitigan clickjacking (X-Frame-Options), MIME-sniffing (X-Content-Type-Options), inyección de contenido (Content-Security-Policy) ni fuerza HTTPS (HSTS). Como es una API consumida por el propio frontend servido por el mismo Flask, el riesgo es moderado, pero conviene añadirlas (p. ej. con flask-talisman).",
+    "evidencia": "Cabeceras ausentes en GET /equipos/: ['X-Content-Type-Options', 'X-Frame-Options', 'Content-Security-Policy', 'Strict-Transport-Security']. Cabeceras presentes: ['Access-Control-Allow-Origin', 'Connection', 'Content-Length', 'Content-Type', 'Date', 'Server']"
+  },
+  {
+    "titulo": "CORS sin restricción de origen (Access-Control-Allow-Origin abierto)",
+    "severidad": "MEDIA",
+    "descripcion": "flask-cors está configurado como CORS(app) sin restricciones (app/app.py), por lo que cualquier origen puede leer las respuestas de la API vía JavaScript, incluyendo endpoints protegidos si el atacante consigue un token por otra vía (p. ej. XSS). Se recomienda restringir origins a los dominios conocidos del frontend.",
+    "evidencia": "Origin enviado: https://sitio-atacante-e2e.example -> Access-Control-Allow-Origin recibido: https://sitio-atacante-e2e.example"
+  },
+  {
+    "titulo": "Sin protección contra fuerza bruta en /auth/login",
+    "severidad": "MEDIA",
+    "descripcion": "Se realizaron 15 intentos de login fallidos consecutivos contra el mismo usuario en 2.82s sin ningún bloqueo, CAPTCHA, backoff ni rate-limiting. Un atacante puede probar contraseñas indefinidamente (mitigado parcialmente por el costo de bcrypt, ver informe de rendimiento, pero no es una defensa dedicada).",
+    "evidencia": "15 intentos en 2.82s, todos devolvieron 401 sin bloqueo ni degradación de servicio."
+  },
+  {
+    "titulo": "Posible enumeración de usuarios por canal lateral de tiempo",
+    "severidad": "BAJA",
+    "descripcion": "El login responde notablemente más lento cuando el usuario existe (se calcula bcrypt) que cuando no existe (falla antes, sin bcrypt), lo que permite inferir qué usernames son válidos aunque el mensaje de error sea idéntico ('Credenciales inválidas' en ambos casos).",
+    "evidencia": "Latencia con usuario válido: 190.8 ms. Latencia con usuario inexistente: 2.0 ms. Diferencia: 188.8 ms."
+  }
+]

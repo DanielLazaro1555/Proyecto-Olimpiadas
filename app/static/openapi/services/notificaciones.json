@@ -1,0 +1,38 @@
+{
+  "paths": {
+    "/notificaciones/": {
+      "get": {
+        "summary": "Listar notificaciones",
+        "description": "Devuelve el historial de notificaciones enviadas o simuladas (correo). Requiere token de administrador.",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Historial de notificaciones",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer", "example": 3 },
+                      "fecha_hora": { "type": "string", "example": "2026-07-16 10:05:00" },
+                      "tipo": { "type": "string", "example": "resultado_registrado" },
+                      "canal": { "type": "string", "example": "email" },
+                      "destinatario": { "type": "string", "example": "admin@olimpiadasperu.local" },
+                      "asunto": { "type": "string", "example": "Resultado de partido registrado" },
+                      "mensaje": { "type": "string", "example": "Partido #1: 2 - 1." },
+                      "estado": { "type": "string", "enum": ["enviado", "fallido", "simulado"], "example": "simulado" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Token requerido" },
+          "403": { "description": "Permisos insuficientes (solo admin)" }
+        }
+      }
+    }
+  }
+}

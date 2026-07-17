@@ -1,0 +1,82 @@
+{
+  "paths": {
+    "/deportistas/inscribir": {
+      "post": {
+        "summary": "Inscribir deportista",
+        "description": "Inscribe un deportista en un equipo. Si el documento ya existe se reutiliza el deportista y solo se crea la inscripción. Requiere token de administrador u operador.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id_equipo", "nombre", "apellido", "documento"],
+                "properties": {
+                  "id_equipo": { "type": "integer", "example": 1 },
+                  "nombre": { "type": "string", "example": "Juan" },
+                  "apellido": { "type": "string", "example": "Pérez" },
+                  "documento": { "type": "string", "example": "77889900" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Deportista inscrito con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensaje": { "type": "string", "example": "Deportista inscrito exitosamente" },
+                    "id_deportista": { "type": "integer", "example": 5 }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Faltan campos requeridos" },
+          "404": { "description": "El equipo no existe" },
+          "409": { "description": "El deportista ya está inscrito en este equipo" }
+        }
+      }
+    },
+    "/deportistas/equipo/{equipo_id}": {
+      "get": {
+        "summary": "Listar deportistas de un equipo",
+        "description": "Devuelve los deportistas inscritos en un equipo específico.",
+        "parameters": [
+          {
+            "name": "equipo_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de deportistas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer", "example": 5 },
+                      "nombre": { "type": "string", "example": "Juan" },
+                      "apellido": { "type": "string", "example": "Pérez" },
+                      "documento": { "type": "string", "example": "77889900" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

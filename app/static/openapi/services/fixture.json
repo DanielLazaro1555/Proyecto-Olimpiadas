@@ -1,0 +1,121 @@
+{
+  "paths": {
+    "/fixture/generar/{deporte}": {
+      "post": {
+        "summary": "Generar fixture",
+        "description": "Genera el fixture de enfrentamientos de todos contra todos para un deporte. Requiere mínimo 2 equipos. Requiere token de administrador u operador.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "deporte",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "Futbol" }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Fixture generado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensaje": { "type": "string", "example": "Calendario generado exitosamente para Futbol" },
+                    "deporte": { "type": "string", "example": "Futbol" },
+                    "total_partidos": { "type": "integer", "example": 6 },
+                    "partidos": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "integer", "example": 10 },
+                          "local": { "type": "string", "example": "Los Halcones" },
+                          "visitante": { "type": "string", "example": "Los Pumas" },
+                          "fecha": { "type": "string", "example": "2026-07-07" },
+                          "hora": { "type": "string", "example": "15:00" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Se necesitan al menos 2 equipos para generar el calendario" },
+          "409": { "description": "Ya existe un calendario para este deporte" }
+        }
+      }
+    },
+    "/fixture/consultar/{deporte}": {
+      "get": {
+        "summary": "Consultar fixture",
+        "description": "Obtiene la lista de partidos programados para un deporte específico.",
+        "parameters": [
+          {
+            "name": "deporte",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "Futbol" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Partidos programados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "integer", "example": 10 },
+                      "fecha": { "type": "string", "example": "2026-07-07" },
+                      "hora": { "type": "string", "example": "15:00" },
+                      "equipo_local_id": { "type": "integer", "example": 1 },
+                      "equipo_visitante_id": { "type": "integer", "example": 2 },
+                      "local": { "type": "string", "example": "Los Halcones" },
+                      "visitante": { "type": "string", "example": "Los Pumas" },
+                      "resultado_local": { "type": ["integer", "null"], "example": null },
+                      "resultado_visitante": { "type": ["integer", "null"], "example": null }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fixture/eliminar/{deporte}": {
+      "delete": {
+        "summary": "Eliminar fixture",
+        "description": "Elimina todos los partidos de un deporte. Requiere token de administrador u operador.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "deporte",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "example": "Futbol" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fixture eliminado con éxito",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "mensaje": { "type": "string", "example": "Se eliminaron 6 partidos del deporte Futbol" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
