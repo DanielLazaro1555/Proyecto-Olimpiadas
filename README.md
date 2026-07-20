@@ -1,8 +1,9 @@
 # Sistema Olimpiadas Perú — SOA
 
 **Universidad Tecnológica del Perú · Facultad de Ingeniería**  
-**Asignatura:** Arquitectura Orientada al Servicio (100000SI84) · Sección 35875  
-**Docente:** Ing. Kelvin Macedo Ylachoque  
+**Asignatura:** Arquitectura Orientada al Servicio (1SI84) · 3 créditos · Sección 24230<br>
+**Modalidad:** Virtual en vivo<br>
+**Docente:** Macedo Ylachoque, Kelvin Celso<br>
 **Estudiante:** Huamán Lázaro, Daniel Esteban · U22326979  
 **Año:** 2026
 
@@ -11,6 +12,7 @@
 ## Tabla de Contenidos
 
 - [Descripción](#descripción)
+- [Resumen ejecutivo](#resumen-ejecutivo)
 - [Problemática](#problemática)
 - [Solución propuesta](#solución-propuesta)
 - [Arquitectura de servicios](#arquitectura-de-servicios)
@@ -47,6 +49,36 @@ Los cuatro deportes obligatorios son:
 | Vóley | Damas |
 | Ping-Pong | Mixto |
 
+## Resumen ejecutivo
+
+Este repositorio constituye la evidencia técnica del proyecto final del curso. La
+aplicación permite administrar el ciclo deportivo completo: equipos, deportistas,
+fixture, resultados, clasificación, reportes y notificaciones. La solución está
+organizada en capas HTTP, negocio y persistencia; se ejecuta de forma local o
+contenedorizada y cuenta con pruebas automatizadas, documentación de pruebas no
+funcionales y guía de despliegue.
+
+### Alcance comprobable en el repositorio
+
+| Aspecto | Evidencia | Estado |
+|---|---|:---:|
+| Gestión deportiva | Servicios REST para equipos, deportistas, fixture y resultados | ✅ |
+| Acceso y trazabilidad | JWT, bcrypt, roles y registro de auditoría | ✅ |
+| Información para usuarios | Tabla, goleadores, estadísticas y gráficos en el cliente web | ✅ |
+| Comunicación de eventos | Historial de notificaciones y envío SMTP opcional | ✅ |
+| Calidad | 21 pruebas unitarias y de integración automatizadas | ✅ |
+| Operación | Contenedor Podman, plan de despliegue y persistencia SQLite | ✅ |
+| Evaluación no funcional | Informes reproducibles de rendimiento y seguridad | ✅ |
+
+### Límites conocidos
+
+El proyecto es un prototipo académico funcional. El catálogo es una aproximación
+interna a UDDI y OpenAPI facilita el consumo externo, pero no sustituye una
+integración B2B real. Tampoco se implementó un ESB ni mensajería asíncrona con
+RabbitMQ/Kafka. El informe de seguridad documenta controles pendientes para un
+despliegue público: cabeceras HTTP, CORS restringido y limitación de intentos de
+inicio de sesión.
+
 ## Problemática
 
 La gestión tradicional de eventos deportivos a gran escala depende de procesos manuales o herramientas desconectadas, lo que genera:
@@ -59,7 +91,7 @@ La gestión tradicional de eventos deportivos a gran escala depende de procesos 
 
 ## Solución propuesta
 
-Sistema *API-first* basado en SOA que desacopla la lógica de negocio en **cinco servicios** con contratos de interfaz claros. Cada servicio evoluciona de forma autónoma sin afectar al sistema completo. Incluye autenticación JWT con tres roles (admin / operador / visualizador) para control de acceso diferenciado.
+Sistema *API-first* basado en SOA que separa la lógica de negocio en **siete servicios funcionales** con contratos de interfaz claros: autenticación, equipos, deportistas, fixture, partidos, reportes y notificaciones. El catálogo complementa estos servicios con descubrimiento interno. Incluye autenticación JWT con tres roles (admin / operador / visualizador) para control de acceso diferenciado.
 
 ---
 
@@ -215,13 +247,13 @@ El proyecto actual **sí cumple de forma consistente con el enfoque del curso** 
 | BPM y procesos SOA | ✅ Cumplido | Diagramas BPMN vinculados a procesos reales |
 | Integridad de procesos | ✅ Cumplido | Validaciones de duplicidad, partidos no sobrescribibles, restricciones por rol |
 | Registro interno de servicios | ✅ Cumplido | Catálogo de servicios dinámico (UDDI) en `/catalog/` |
-| Integración B2B / descubrimiento | ✅ Cumplido | Documentación OpenAPI 3.0 interactiva con Swagger UI en `/docs` |
+| Descubrimiento y documentación para consumo externo | ✅ Cumplido | Catálogo interno en `/catalog/` y OpenAPI 3.0 interactivo en `/docs` |
 | Auditoría / Service Bus | ✅ Cumplido | Registro persistente de operaciones críticas (Audit Trail) |
 | Pruebas y calidad | ✅ Cumplido | Tests unitarios y de integración ejecutables en Podman |
 
 ### Juicio académico práctico
 
-Para fines del curso, el proyecto **es completamente defendible y califica para nota máxima** porque ya demuestra:
+Para fines del curso, el proyecto es **técnicamente defendible** porque demuestra:
 
 - diseño orientado a servicios (capas desacopladas)
 - separación de responsabilidades (adaptadores, negocio, persistencia)
@@ -238,7 +270,9 @@ Lo que **todavía no conviene afirmar como terminado** es:
 
 - integración por bus de servicios empresariales (ESB) o mensajería asíncrona avanzada (RabbitMQ/Kafka)
 
-En otras palabras: **cumple rigurosamente con todos los hitos evaluativos del curso y la Unidad 3**, destacando por su completitud técnica y documental.
+En otras palabras: cumple los requisitos técnicos verificables registrados en el
+repositorio. La aprobación de exposiciones, entregas en UTP Class, PPT y demás
+evidencias externas depende de la validación del docente.
 
 ---
 
@@ -632,9 +666,12 @@ Flask de extremo a extremo contra una SQLite temporal:
 
 ```bash
 source venv/bin/activate
-python -m pytest tests/ -q
-# 21 passed
+python -m unittest discover -s tests -v
 ```
+
+Resultado verificado en la revisión final: **21 pruebas ejecutadas, 0 fallos**.
+La suite usa `unittest`, incluido en Python; por ello puede ejecutarse después de
+instalar únicamente `app/requirements.txt`, sin depender de `pytest`.
 
 ### Pruebas de rendimiento
 
@@ -643,6 +680,15 @@ ver [`docs/pruebas/rendimiento/`](docs/pruebas/rendimiento/). Tres escenarios: l
 públicas concurrentes, login concurrente (costo real de bcrypt) y escrituras concurrentes
 (contención de SQLite). Resultados e informe completo en
 [`INFORME_RENDIMIENTO.md`](docs/pruebas/rendimiento/INFORME_RENDIMIENTO.md).
+
+| Escenario (20 clientes concurrentes) | Peticiones | Errores | Latencia p95 |
+|---|---:|---:|---:|
+| Lecturas públicas | 400 | 0 | 22.2 ms |
+| Inicio de sesión con bcrypt | 200 | 0 | 682.4 ms |
+| Escrituras concurrentes en SQLite | 100 | 0 | 185.5 ms |
+
+El costo mayor del login es intencional por bcrypt; la principal mejora futura
+identificada es activar WAL en SQLite para reducir la contención de escrituras.
 
 ### Pruebas de seguridad
 
@@ -653,6 +699,11 @@ Se encontró y **corrigió en esta misma entrega** un hallazgo crítico (secreto
 por defecto hardcodeado y predecible); quedan 3 hallazgos abiertos de severidad media/baja
 con recomendación documentada. Detalle completo en
 [`INFORME_SEGURIDAD.md`](docs/pruebas/seguridad/INFORME_SEGURIDAD.md).
+
+Las pruebas confirmaron que no fue explotable la inyección SQL, el bypass de JWT
+(`alg=none`), ni la escalación de privilegios por roles. El secreto JWT predecible
+detectado inicialmente fue corregido. Quedan documentados cuatro hallazgos de
+prioridad media/baja para una futura puesta en producción.
 
 ---
 
@@ -712,7 +763,7 @@ Según el sílabo (Unidad 3 — Semanas 11–15), los temas a abordar e implemen
 - Separación `core/services` + `core/repositories` + adaptadores HTTP Flask
 
 ### Semana 12 — Registro de Servicios (concepto UDDI)
-- Implementar endpoint `GET /servicios` que liste todos los servicios disponibles con sus operaciones y contratos (registro interno tipo UDDI simplificado)
+- Implementar un endpoint de catálogo que liste los servicios disponibles con sus operaciones y contratos. En la implementación final se expone como `GET /catalog/` (registro interno tipo UDDI simplificado).
 
 ### Semana 13 — Integración de procesos / B2B
 - Generar documentación OpenAPI (Swagger) de la API para consumo externo
